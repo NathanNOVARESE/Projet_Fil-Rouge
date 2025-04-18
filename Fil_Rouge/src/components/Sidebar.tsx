@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { 
-  LayoutDashboard, 
-  ListTodo, 
-  Tag, 
-  Calendar, 
-  Settings, 
+  TrendingUp,
+  Gamepad2,
+  Home,
+  Trophy,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -20,11 +19,10 @@ const Sidebar: React.FC = () => {
   };
 
   const menuItems = [
-    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { path: '/tasks', label: 'Tasks', icon: <ListTodo size={20} /> },
-    { path: '/tags', label: 'Tags', icon: <Tag size={20} /> },
-    { path: '/calendar', label: 'Calendar', icon: <Calendar size={20} /> },
-    { path: '/settings', label: 'Settings', icon: <Settings size={20} /> },
+    { path: '/', label: 'Accueil', icon: <Home size={20} /> },
+    { path: '/trending', label: 'Tendances', icon: <TrendingUp size={20} /> },
+    { path: '/tags', label: 'Jeux Vidéos', icon: <Gamepad2 size={20} /> },
+    { path: '/Trophy', label: 'Compétitions', icon: <Trophy size={20} /> },
   ];
 
   return (
