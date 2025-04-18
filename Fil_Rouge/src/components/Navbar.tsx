@@ -56,83 +56,62 @@ const Navbar: React.FC = () => {
             <div className="flex items-center space-x-2">
               <div className="hidden md:block">
             </div>
-            <div
-            className="relative group"
-            onMouseEnter={() => {
-              const dropdown = document.getElementById('profile-dropdown');
-              if (dropdown) dropdown.style.display = 'block';
-            }}
-            onMouseLeave={(e) => {
-              const dropdown = document.getElementById('profile-dropdown');
-              const relatedTarget = e.relatedTarget as HTMLElement;
-              if (
-              dropdown &&
-              !dropdown.contains(relatedTarget) &&
-              !dropdown.contains(e.target as HTMLElement)
-              ) {
-              setTimeout(() => {
-                if (
-                dropdown &&
-                !dropdown.contains(document.activeElement as HTMLElement)
-                ) {
-                dropdown.style.display = 'none';
+            <div className="relative">
+              <button
+              className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300"
+              onClick={() => {
+                const dropdown = document.getElementById('profile-dropdown');
+                if (dropdown) {
+                dropdown.style.display =
+                  dropdown.style.display === 'block' ? 'none' : 'block';
                 }
-              }, 1000);
-              }
-            }}
-            >
-              <button className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
+              }}
+              >
               <User size={20} />
               </button>
               <div
               id="profile-dropdown"
               className="absolute right-[-40%] mt-2 w-48 bg-white dark:bg-gray-800 rounded shadow-lg py-2 z-20 hidden"
-              onMouseEnter={() => {
-                const dropdown = document.getElementById('profile-dropdown');
-                if (dropdown) dropdown.style.display = 'block';
-              }}
-              onMouseLeave={(e) => {
-                const relatedTarget = e.relatedTarget as HTMLElement;
-                const dropdown = document.getElementById('profile-dropdown');
-                if (
-                dropdown &&
-                !dropdown.contains(relatedTarget) &&
-                !dropdown.contains(e.target as HTMLElement)
-                ) {
-                setTimeout(() => {
-                  if (
-                  dropdown &&
-                  !dropdown.contains(document.activeElement as HTMLElement)
-                  ) {
-                  dropdown.style.display = 'none';
-                  }
-                }, 1000);
-                }
-              }}
               >
               <Link
-              to="/profile"
-              className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                to="/profile"
+                className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-              Profile
+                Profile
               </Link>
               <Link
-              to="/settings"
-              className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                to="/settings"
+                className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-              Settings
+                Settings
               </Link>
               <button
-              onClick={handleLogout}
-              className="w-full text-left block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                onClick={handleLogout}
+                className="w-full text-left block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-              <div className="flex items-center">
-              <LogOut size={16} className="mr-2" />
-              <span>Logout</span>
-              </div>
+                <div className="flex items-center">
+                <LogOut size={16} className="mr-2" />
+                <span>Logout</span>
+                </div>
               </button>
               </div>
-              </div>
+            </div>
+            <script>
+              {`
+              document.addEventListener('click', (event) => {
+                const dropdown = document.getElementById('profile-dropdown');
+                const button = event.target.closest('button');
+                if (
+                dropdown &&
+                dropdown.style.display === 'block' &&
+                !dropdown.contains(event.target) &&
+                (!button || button.className.indexOf('bg-blue-100') === -1)
+                ) {
+                dropdown.style.display = 'none';
+                }
+              });
+              `}
+            </script>
             </div>
           ) : (
             <div className="flex items-center space-x-2">

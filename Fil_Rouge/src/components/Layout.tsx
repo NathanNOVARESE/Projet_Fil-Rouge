@@ -8,12 +8,12 @@ const Layout: React.FC = () => {
   const { darkMode } = useStore();
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen bg-[url(./assets/bg-white.jpg)] ${darkMode ? 'd bg-[url(./assets/bg.jpg)]' : 'bg-gray-50'}`}>
       <Navbar />
       <div className="flex">
         <Sidebar />
         <main className="flex-1 p-4 md:p-8">
-          <Outlet />
+          <Outlet />  
         </main>
       </div>
     </div>
