@@ -1,0 +1,70 @@
+import React, { useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import { useStore } from '../lib/store';
+import { 
+  LayoutDashboard, 
+  ListTodo, 
+  Tag, 
+  Calendar, 
+  Settings, 
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react';
+
+const Sidebar: React.FC = () => {
+  const { darkMode } = useStore();
+  const [collapsed, setCollapsed] = useState(false);
+
+  const toggleSidebar = () => {
+    setCollapsed(!collapsed);
+  };
+
+  const menuItems = [
+    { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { path: '/tasks', label: 'Tasks', icon: <ListTodo size={20} /> },
+    { path: '/tags', label: 'Tags', icon: <Tag size={20} /> },
+    { path: '/calendar', label: 'Calendar', icon: <Calendar size={20} /> },
+    { path: '/settings', label: 'Settings', icon: <Settings size={20} /> },
+  ];
+
+  return (
+    <aside
+      className={`${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
+      } ${
+        collapsed ? 'w-16' : 'w-64'
+      } min-h-screen transition-all duration-300 shadow-md hidden md:block relative`}
+    >
+      <button
+        onClick={toggleSidebar}
+        className="absolute -right-3 top-10 bg-white dark:bg-gray-800 rounded-full p-1 shadow-md"
+      >
+        {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+      </button>
+      
+      <div className="pt-8 pb-4">
+        <ul className="space-y-2">
+          {menuItems.map((item) => (
+            <li key={item.path}>
+              <NavLink
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center px-4 py-3 ${
+                    isActive
+                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-r-4 border-blue-500'
+                      : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                  } transition-colors`
+                }
+              >
+                <span className="mr-3">{item.icon}</span>
+                {!collapsed && <span>{item.label}</span>}
+              </NavLink>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </aside>
+  );
+};
+
+export default Sidebar;
