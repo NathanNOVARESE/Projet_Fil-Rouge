@@ -9,6 +9,7 @@ const Layout: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-cover bg-center bg-[url(./assets/bg-white.jpg)] ${darkMode ? 'bg-[url(./assets/bg.jpg)]' : 'bg-gray-50'}`}>
+    <div className={`min-h-screen  ${darkMode ? 'dark bg-gray-900' : 'bg-gray-50'}`}>
       <Navbar />
       <div className="flex flex-col md:flex-row">
         <Sidebar/>
