@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useStore, Task } from '../lib/store';
 import TaskCard from '../components/TaskCard';
 import TaskForm from '../components/TaskForm';
-import { Plus, X, Filter, Search } from 'lucide-react';
+import { Plus, X, Filter, Search, ListTodo } from 'lucide-react';
 
 const TasksPage: React.FC = () => {
   const { tasks, user, darkMode, addTask, updateTask } = useStore();

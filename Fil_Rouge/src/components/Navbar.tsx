@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store';
-import { Moon, Sun, Bell, User, LogOut, Trophy } from 'lucide-react';
+import { Moon, Sun, Bell, User, LogOut } from 'lucide-react';
 import { Joystick, Search} from 'lucide-react';
 
 const Navbar: React.FC = () => {
