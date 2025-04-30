@@ -73,9 +73,9 @@ const GameForum: React.FC = () => {
   return (
     <div className={`p-6 ${darkMode ? 'text-white' : ' text-gray-900'}`}>
       {/* Welcome section */}
-      <div className={`p-8 mb-8 rounded-lg ${darkMode ?  'bg-gray-800' : 'bg-white'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'} shadow`} style={{ height: '300px' }}>
-        <h1 className="text-4xl font-bold mb-4 text-blue-500">Bienvenue sur GameForum</h1>
-        <p className="text-2xl font-bold">Rejoignez la plus grande communauté de gamers francophones. Discutez, partagez et restez informé des dernières actualités gaming.</p>
+      <div className={`p-4 sm:p-8 mb-8 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'} shadow`} style={{ height: 'auto' }}>
+        <h1 className="text-2xl sm:text-4xl font-bold mb-4 text-blue-500">Bienvenue sur GameForum</h1>
+        <p className="text-lg sm:text-2xl font-bold">Rejoignez la plus grande communauté de gamers francophones. Discutez, partagez et restez informé des dernières actualités gaming.</p>
       </div>
       
       {/* Community section */}
