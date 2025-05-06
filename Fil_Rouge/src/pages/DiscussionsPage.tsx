@@ -176,13 +176,15 @@ const DiscussionsPage: React.FC = () => {
   }
 
   return (
-    <div className={`p-6 ${darkMode ? 'text-white' : ' text-gray-900'}`}>
+    <div className={`p-4 md:p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
       {/* Header section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-        <h1 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-4">Discussions</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0 inline-block border-b-4 border-gray-300 pb-2">
+          Discussions
+        </h1>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
         >
           {showForm ? (
             <>
@@ -200,8 +202,8 @@ const DiscussionsPage: React.FC = () => {
 
       {/* Form for creating a new discussion */}
       {showForm && (
-        <div className={`mb-6 p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
-          <h2 className="text-xl font-semibold mb-4">Créer une nouvelle discussion</h2>
+        <div className={`mb-6 p-4 md:p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
+          <h2 className="text-lg md:text-xl font-semibold mb-4">Créer une nouvelle discussion</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Title input */}
             <div>
@@ -211,8 +213,8 @@ const DiscussionsPage: React.FC = () => {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className={`w-full px-3 py-2 rounded-md ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
+                  darkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
                     : 'bg-white border-gray-300 text-gray-900'
                 } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 required
@@ -227,8 +229,8 @@ const DiscussionsPage: React.FC = () => {
                 onChange={(e) => setContent(e.target.value)}
                 rows={5}
                 className={`w-full px-3 py-2 rounded-md ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white' 
+                  darkMode
+                    ? 'bg-gray-700 border-gray-600 text-white'
                     : 'bg-white border-gray-300 text-gray-900'
                 } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 required
@@ -243,15 +245,17 @@ const DiscussionsPage: React.FC = () => {
                   value={selectedGame}
                   onChange={(e) => setSelectedGame(e.target.value)}
                   className={`w-full px-3 py-2 rounded-md ${
-                    darkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
                   } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 >
                   <option value="">Sélectionnez un jeu</option>
-                  {games.map(game => (
-                    <option key={game} value={game}>{game}</option>
+                  {games.map((game) => (
+                    <option key={game} value={game}>
+                      {game}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -262,15 +266,17 @@ const DiscussionsPage: React.FC = () => {
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className={`w-full px-3 py-2 rounded-md ${
-                    darkMode 
-                      ? 'bg-gray-700 border-gray-600 text-white' 
+                    darkMode
+                      ? 'bg-gray-700 border-gray-600 text-white'
                       : 'bg-white border-gray-300 text-gray-900'
                   } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   required
                 >
                   <option value="">Sélectionnez une catégorie</option>
-                  {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                  {categories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -284,9 +290,9 @@ const DiscussionsPage: React.FC = () => {
                   <span
                     key={tag.id}
                     className="flex items-center px-2 py-1 rounded-full text-sm"
-                    style={{ 
+                    style={{
                       backgroundColor: `${tag.color}20`,
-                      color: tag.color 
+                      color: tag.color,
                     }}
                   >
                     {tag.name}
@@ -308,8 +314,8 @@ const DiscussionsPage: React.FC = () => {
                     onChange={(e) => setNewTagName(e.target.value)}
                     placeholder="Ajouter un nouveau tag"
                     className={`w-full px-3 py-2 rounded-md ${
-                      darkMode 
-                        ? 'bg-gray-700 border-gray-600 text-white' 
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-white'
                         : 'bg-white border-gray-300 text-gray-900'
                     } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
                   />
@@ -322,35 +328,16 @@ const DiscussionsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
-              <div className="mt-2">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">Tags disponibles :</p>
-                <div className="flex flex-wrap gap-2">
-                  {availableTags.map((tag) => (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      onClick={() => addTag(tag)}
-                      className="px-2 py-1 rounded-full text-sm"
-                      style={{ 
-                        backgroundColor: `${tag.color}20`,
-                        color: tag.color 
-                      }}
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Form buttons */}
-            <div className="flex justify-end space-x-2">
+            <div className="flex flex-col md:flex-row justify-end space-y-2 md:space-y-0 md:space-x-2">
               <button
                 type="button"
                 onClick={() => setShowForm(false)}
-                className={`px-4 py-2 rounded ${
-                  darkMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                className={`w-full md:w-auto px-4 py-2 rounded ${
+                  darkMode
+                    ? 'bg-gray-700 text-white hover:bg-gray-600'
                     : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
                 } transition-colors`}
               >
@@ -358,7 +345,7 @@ const DiscussionsPage: React.FC = () => {
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center"
+                className="w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors flex items-center justify-center"
               >
                 <Send size={16} className="mr-2" />
                 Publier
@@ -467,7 +454,7 @@ const DiscussionsPage: React.FC = () => {
                       by {discussion.author.name} • {discussion.createdAt}
                     </p>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 mr-2">
                     <span className={`px-2 py-1 rounded-full text-sm ${
                       darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
                     }`}>
@@ -513,7 +500,7 @@ const DiscussionsPage: React.FC = () => {
                     <span>{discussion.replies}</span>
                   </div>
                   <div className="flex items-center">
-                    <Clock size={16} className="mr-1" />
+                    <Clock size={16} className="ml(1" />
                     <span>{discussion.createdAt}</span>
                   </div>
                 </div>
