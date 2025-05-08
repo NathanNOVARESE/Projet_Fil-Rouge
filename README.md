@@ -94,6 +94,5 @@ gameforum/
 ## Acknowledgments
 
 - [React](https://reactjs.org/)
-- [Supabase](https://supabase.io/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Lucide Icons](https://lucide.dev/)
