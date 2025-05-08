@@ -1,702 +1,646 @@
-import React, { useState } from 'react';
-import { MessageSquare, Users, Flag, Settings, Bell, Search, BarChart2, FileText, ThumbsUp, AlertTriangle, LogOut, Trash2, Edit, Ban, Check, X, Shield, Mail, Lock, Globe } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useStore } from '../lib/store';
+import {
+  Users,
+  MessageSquare,
+  TrendingUp,
+  Trophy,
+  Gamepad2,
+  Activity,
+  Star,
+  Calendar,
+  ChevronRight,
+  Clock,
+  Search,
+  MoreHorizontal,
+  ArrowUp,
+  ArrowDown
+} from 'lucide-react';
 
-const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('activity');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+interface DashboardStats {
+  totalUsers: number;
+  activeDiscussions: number;
+  trendingTopics: number;
+  ongoingTournaments: number;
+  newUsers: number;
+  engagementRate: number;
+}
 
-  // Données mock
-  const forumStats = [
-    { label: "Membres", value: "24,591", trend: "+12% ce mois" },
-    { label: "Posts", value: "189,403", trend: "+23% ce mois" },
-    { label: "Topics", value: "15,287", trend: "+8% ce mois" },
-    { label: "Activité", value: "92%", trend: "En hausse" }
-  ];
+interface TrendingGame {
+  id: string;
+  title: string;
+  playerCount: number;
+  change: number;
+  coverImage: string;
+  genre: string;
+}
 
-  const recentPosts = [
-    { 
-      id: 1, 
-      title: "Meilleur build pour Soraka en S14", 
-      author: "LoLPlayer92", 
-      date: "10 min", 
-      likes: 42,
-      game: "League of Legends",
-      reported: false
+interface UpcomingTournament {
+  id: string;
+  title: string;
+  game: string;
+  date: string;
+  participants: number;
+  maxParticipants: number;
+  prizePool: string;
+  gameIcon: string;
+}
+
+interface RecentDiscussion {
+  id: string;
+  title: string;
+  author: string;
+  game: string;
+  replies: number;
+  views: number;
+  timeAgo: string;
+  tags: string[];
+}
+
+const AdminDashboard: React.FC = () => {
+  const { user, darkMode } = useStore();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalUsers: 0,
+    activeDiscussions: 0,
+    trendingTopics: 0,
+    ongoingTournaments: 0,
+    newUsers: 0,
+    engagementRate: 0
+  });
+  const [activeTab, setActiveTab] = useState('overview');
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Mock data
+  const trendingGames: TrendingGame[] = [
+    {
+      id: '1',
+      title: 'Valorant',
+      playerCount: 12543,
+      change: 15,
+      coverImage: 'https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg',
+      genre: 'FPS'
     },
-    { 
-      id: 2, 
-      title: "[BUG] Problème de hitbox sur Mirage", 
-      author: "CS2Fan", 
-      date: "25 min", 
-      likes: 15,
-      game: "CS2",
-      reported: true
+    {
+      id: '2',
+      title: 'League of Legends',
+      playerCount: 34567,
+      change: 8,
+      coverImage: 'https://images.pexels.com/photos/7862657/pexels-photo-7862657.jpeg',
+      genre: 'MOBA'
     },
-    { 
-      id: 3, 
-      title: "Guide débutant pour le ranked", 
-      author: "ValoCoach", 
-      date: "1h", 
-      likes: 87,
-      game: "Valorant",
-      reported: false
+    {
+      id: '3',
+      title: 'Counter-Strike 2',
+      playerCount: 45678,
+      change: -5,
+      coverImage: 'https://images.pexels.com/photos/7915357/pexels-photo-7915357.jpeg',
+      genre: 'FPS'
+    },
+    {
+      id: '4',
+      title: 'Fortnite',
+      playerCount: 78901,
+      change: 12,
+      coverImage: 'https://images.pexels.com/photos/4107820/pexels-photo-4107820.jpeg',
+      genre: 'Battle Royale'
     }
   ];
 
-  const reportedContent = [
+  const upcomingTournaments: UpcomingTournament[] = [
     {
-      id: 1,
-      type: "Post",
-      reason: "Langage inapproprié",
-      content: "Ce joueur est un noob...",
-      author: "ToxicPlayer",
-      date: "15 min"
+      id: '1',
+      title: 'Valorant Champions Tour',
+      game: 'Valorant',
+      date: '2024-03-15',
+      participants: 64,
+      maxParticipants: 128,
+      prizePool: '$250,000',
+      gameIcon: 'https://images.pexels.com/photos/3165335/pexels-photo-3165335.jpeg'
     },
     {
-      id: 2,
-      type: "Commentaire",
-      reason: "Spam",
-      content: "Venez sur mon stream twitch.tv...",
-      author: "Spammer123",
-      date: "30 min"
+      id: '2',
+      title: 'League of Legends Spring Split',
+      game: 'League of Legends',
+      date: '2024-03-20',
+      participants: 32,
+      maxParticipants: 64,
+      prizePool: '$500,000',
+      gameIcon: 'https://images.pexels.com/photos/7862657/pexels-photo-7862657.jpeg'
+    },
+    {
+      id: '3',
+      title: 'CS2 Major Championship',
+      game: 'Counter-Strike 2',
+      date: '2024-04-05',
+      participants: 24,
+      maxParticipants: 32,
+      prizePool: '$1,000,000',
+      gameIcon: 'https://images.pexels.com/photos/7915357/pexels-photo-7915357.jpeg'
     }
   ];
 
-  // Données mock pour les membres
-  const members = [
+  const recentDiscussions: RecentDiscussion[] = [
     {
-      id: 1,
-      username: "GameMaster",
-      email: "gamemaster@example.com",
-      joinDate: "15/02/2021",
-      lastActive: "Aujourd'hui",
-      role: "Admin",
-      status: "active"
+      id: '1',
+      title: 'New Valorant Agent Discussion - Abilities Breakdown',
+      author: 'ProGamer',
+      game: 'Valorant',
+      replies: 23,
+      views: 456,
+      timeAgo: '2 hours ago',
+      tags: ['Patch Notes', 'Meta']
     },
     {
-      id: 2,
-      username: "ModeratorPro",
-      email: "mod@example.com",
-      joinDate: "22/05/2022",
-      lastActive: "Hier",
-      role: "Modérateur",
-      status: "active"
+      id: '2',
+      title: 'CS2 Strategy Guide for New Maps',
+      author: 'CSMaster',
+      game: 'Counter-Strike 2',
+      replies: 45,
+      views: 892,
+      timeAgo: '3 hours ago',
+      tags: ['Guide', 'Maps']
     },
     {
-      id: 3,
-      username: "ToxicPlayer",
-      email: "toxic@example.com",
-      joinDate: "10/10/2023",
-      lastActive: "3 jours",
-      role: "Membre",
-      status: "banned"
+      id: '3',
+      title: 'LoL Meta Analysis - Best Champions for Ranked',
+      author: 'LeaguePro',
+      game: 'League of Legends',
+      replies: 67,
+      views: 1245,
+      timeAgo: '5 hours ago',
+      tags: ['Meta', 'Ranked']
+    },
+    {
+      id: '4',
+      title: 'Fortnite Season 5: New Weapons and Items',
+      author: 'FortniteFan',
+      game: 'Fortnite',
+      replies: 34,
+      views: 789,
+      timeAgo: '1 hour ago',
+      tags: ['Seasonal', 'Items']
     }
   ];
 
-  // Données mock pour les posts
-  const allPosts = [
-    ...recentPosts,
-    { 
-      id: 4, 
-      title: "Discussion générale sur Elden Ring DLC", 
-      author: "SoulsFan", 
-      date: "2h", 
-      likes: 156,
-      game: "Elden Ring",
-      reported: false
-    },
-    { 
-      id: 5, 
-      title: "[SPOILER] Fin alternative découverte", 
-      author: "GamerExplorer", 
-      date: "5h", 
-      likes: 89,
-      game: "Baldur's Gate 3",
-      reported: true
-    }
-  ];
+  useEffect(() => {
+    // Simulate API call
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // In a real app, this would be an API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setStats({
+          totalUsers: 15234,
+          activeDiscussions: 456,
+          trendingTopics: 89,
+          ongoingTournaments: 12,
+          newUsers: 234,
+          engagementRate: 68
+        });
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Données mock pour la modération
-  const moderationActions = [
-    {
-      id: 1,
-      action: "Suppression de post",
-      moderator: "ModeratorPro",
-      target: "Post #4512",
-      reason: "Contenu NSFW",
-      date: "10 min"
-    },
-    {
-      id: 2,
-      action: "Bannissement",
-      moderator: "GameMaster",
-      target: "Utilisateur Toxic123",
-      reason: "Harcèlement répété",
-      date: "1h"
-    },
-    {
-      id: 3,
-      action: "Avertissement",
-      moderator: "ModeratorPro",
-      target: "Utilisateur NewPlayer",
-      reason: "Spam",
-      date: "3h"
-    }
-  ];
+    fetchData();
+  }, []);
 
-  // Données mock pour les paramètres
-  const forumSettings = [
-    {
-      category: "Général",
-      settings: [
-        { name: "Nom du forum", value: "GameForum", editable: true },
-        { name: "Description", value: "La communauté des gamers passionnés", editable: true },
-        { name: "Langue", value: "Français", editable: true }
-      ]
-    },
-    {
-      category: "Modération",
-      settings: [
-        { name: "Posts nécessitant approbation", value: "Oui", editable: true },
-        { name: "Niveau de censure", value: "Moyen", editable: true },
-        { name: "Signalements nécessaires pour masquer", value: "3", editable: true }
-      ]
-    },
-    {
-      category: "Sécurité",
-      settings: [
-        { name: "Connexion requise", value: "Oui", editable: true },
-        { name: "Enregistrement ouvert", value: "Oui", editable: true },
-        { name: "Authentification à deux facteurs", value: "Pour les modérateurs", editable: true }
-      ]
-    }
-  ];
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="text-center py-10">
+        <h1 className="text-2xl font-bold mb-4">Dashboard</h1>
+        <p className="mb-6">Please log in to view the dashboard.</p>
+        <a 
+          href="/login" 
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Log In
+        </a>
+      </div>
+    );
+  }
+
+  const filteredTrendingGames = trendingGames.filter(game =>
+    game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    game.genre.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredTournaments = upcomingTournaments.filter(tournament =>
+    tournament.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    tournament.game.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredDiscussions = recentDiscussions.filter(discussion =>
+    discussion.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    discussion.game.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    discussion.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+  );
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <div className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-gray-800 text-white transition-all duration-200`}>
-        <div className="p-4 border-b border-gray-700 flex items-center justify-between">
-          {!sidebarCollapsed && <h1 className="text-xl font-bold">ModPanel</h1>}
-          <button 
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1 hover:bg-gray-700 rounded"
-          >
-            {sidebarCollapsed ? "»" : "«"}
-          </button>
+    <div className={`min-h-screen bg-gray-900 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'} p-6`}>
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl text-white font-bold">Dashboard Overview</h1>
+          <p className="text-gray-500">Welcome back, {user.name || 'Admin'}! Here's what's happening today.</p>
         </div>
         
-        <nav className="p-2">
-          {[
-            { icon: <BarChart2 size={18} />, label: "Activité", id: "activity" },
-            { icon: <MessageSquare size={18} />, label: "Posts", id: "posts" },
-            { icon: <Users size={18} />, label: "Membres", id: "members" },
-            { icon: <Flag size={18} />, label: "Signalements", id: "reports" },
-            { icon: <AlertTriangle size={18} />, label: "Modération", id: "moderation" },
-            { icon: <Settings size={18} />, label: "Paramètres", id: "settings" }
-          ].map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`flex items-center w-full p-3 rounded mb-1 ${
-                activeTab === item.id ? 'bg-blue-600' : 'hover:bg-gray-700'
-              }`}
-            >
-              <span className="mr-3">{item.icon}</span>
-              {!sidebarCollapsed && item.label}
-            </button>
-          ))}
-        </nav>
+        <div className="relative w-full md:w-64">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+          <input
+            type="text"
+            placeholder="Search..."
+            className={`w-full pl-10 pr-4 py-2 rounded-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-white'} border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-gray-200 dark:border-gray-700 mb-6">
+        {['overview', 'analytics', 'users', 'content', 'settings'].map((tab) => (
+          <button
+            key={tab}
+            className={`px-4 py-2 font-medium text-sm flex items-center ${activeTab === tab ? 'text-blue-500 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'}`}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-6">
+        <StatCard
+          icon={<Users className="text-blue-500" size={20} />}
+          title="Total Users"
+          value={stats.totalUsers.toLocaleString()}
+          change={12}
+          darkMode={darkMode}
+        />
+        <StatCard
+          icon={<MessageSquare className="text-green-500" size={20} />}
+          title="Active Discussions"
+          value={stats.activeDiscussions}
+          change={8}
+          darkMode={darkMode}
+        />
+        <StatCard
+          icon={<TrendingUp className="text-purple-500" size={20} />}
+          title="Trending Topics"
+          value={stats.trendingTopics}
+          change={23}
+          darkMode={darkMode}
+        />
+        <StatCard
+          icon={<Trophy className="text-yellow-500" size={20} />}
+          title="Active Tournaments"
+          value={stats.ongoingTournaments}
+          change={-2}
+          darkMode={darkMode}
+        />
+        <StatCard
+          icon={<Users className="text-pink-500" size={20} />}
+          title="New Users"
+          value={stats.newUsers}
+          change={15}
+          darkMode={darkMode}
+        />
+        <StatCard
+          icon={<Activity className="text-teal-500" size={20} />}
+          title="Engagement Rate"
+          value={`${stats.engagementRate}%`}
+          change={5}
+          darkMode={darkMode}
+        />
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        {/* Top Bar */}
-        <header className="bg-white border-b p-4 flex justify-between items-center">
-          <h2 className="text-xl font-semibold">
-            {activeTab === 'activity' && 'Activité du forum'}
-            {activeTab === 'posts' && 'Gestion des posts'}
-            {activeTab === 'members' && 'Gestion des membres'}
-            {activeTab === 'reports' && 'Contenu signalé'}
-            {activeTab === 'moderation' && 'Historique de modération'}
-            {activeTab === 'settings' && 'Paramètres du forum'}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Trending Games */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg lg:col-span-2`}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold flex items-center">
+              <Gamepad2 className="text-blue-500 mr-2" size={20} />
+              Trending Games
+            </h2>
+            <button className="text-sm text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center">
+              View All
+              <ChevronRight size={16} className="ml-1" />
+            </button>
+          </div>
+          
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-left text-sm`}>
+                  <th className="pb-3 font-medium">Game</th>
+                  <th className="pb-3 font-medium">Genre</th>
+                  <th className="pb-3 font-medium">Players</th>
+                  <th className="pb-3 font-medium">Trend</th>
+                  <th className="pb-3 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                {filteredTrendingGames.map(game => (
+                  <tr key={game.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                    <td className="py-4">
+                      <div className="flex items-center">
+                        <img
+                          src={game.coverImage}
+                          alt={game.title}
+                          className="w-10 h-10 rounded-lg object-cover mr-3"
+                        />
+                        <span className="font-medium">{game.title}</span>
+                      </div>
+                    </td>
+                    <td className="py-4">
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {game.genre}
+                      </span>
+                    </td>
+                    <td className="py-4">{game.playerCount.toLocaleString()}</td>
+                    <td className="py-4">
+                      <div className={`flex items-center ${
+                        game.change >= 0 ? 'text-green-500' : 'text-red-500'
+                      }`}>
+                        {game.change >= 0 ? <ArrowUp size={16} /> : <ArrowDown size={16} />}
+                        <span className="ml-1">{Math.abs(game.change)}%</span>
+                      </div>
+                    </td>
+                    <td className="py-4 text-right">
+                      <button className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <MoreHorizontal size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
+          <h2 className="text-xl font-semibold mb-6 flex items-center">
+            <Activity className="text-purple-500 mr-2" size={20} />
+            Community Activity
           </h2>
           
-          <div className="flex items-center space-x-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
-              <input
-                type="text"
-                placeholder="Rechercher..."
-                className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              />
-            </div>
-            <button className="p-2 rounded-full hover:bg-gray-100 relative">
-              <Bell size={20} />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                AD
+          <div className="space-y-5">
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium">New Signups</span>
+                <span className="text-sm font-medium">{stats.newUsers}</span>
               </div>
-              {!sidebarCollapsed && (
-                <>
-                  <span className="font-medium">Admin</span>
-                  <LogOut size={18} className="text-gray-500" />
-                </>
-              )}
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-blue-500 h-2 rounded-full" 
+                  style={{ width: `${Math.min(100, (stats.newUsers / 500) * 100)}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium">Discussion Posts</span>
+                <span className="text-sm font-medium">{stats.activeDiscussions}</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-green-500 h-2 rounded-full" 
+                  style={{ width: `${Math.min(100, (stats.activeDiscussions / 1000) * 100)}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium">Tournament Participation</span>
+                <span className="text-sm font-medium">{stats.ongoingTournaments * 20}</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-yellow-500 h-2 rounded-full" 
+                  style={{ width: `${Math.min(100, (stats.ongoingTournaments * 20 / 500) * 100)}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium">Engagement Rate</span>
+                <span className="text-sm font-medium">{stats.engagementRate}%</span>
+              </div>
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                <div 
+                  className="bg-teal-500 h-2 rounded-full" 
+                  style={{ width: `${stats.engagementRate}%` }}
+                ></div>
+              </div>
             </div>
           </div>
-        </header>
-
-        {/* Dashboard Content */}
-        <main className="p-6">
-          {activeTab === 'activity' && (
-            <>
-              {/* Forum statistics */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                {forumStats.map((stat, index) => (
-                  <div key={index} className="bg-white p-4 rounded-lg border shadow-sm">
-                    <h3 className="text-gray-500 text-sm font-medium">{stat.label}</h3>
-                    <p className="text-2xl font-bold mt-1">{stat.value}</p>
-                    <p className="text-green-500 text-xs mt-1">{stat.trend}</p>
+          
+          <div className="mt-8">
+            <h3 className="text-sm font-medium mb-3">Recent Activity</h3>
+            <div className="space-y-3">
+              {[
+                { id: 1, text: "New tournament 'Valorant Champions' created", time: "5 min ago" },
+                { id: 2, text: "User 'ProGamer' reached level 50", time: "12 min ago" },
+                { id: 3, text: "Discussion 'Meta Changes' got 50 replies", time: "23 min ago" },
+                { id: 4, text: "124 new users signed up today", time: "1 hour ago" }
+              ].map(item => (
+                <div key={item.id} className="flex items-start">
+                  <div className={`flex-shrink-0 h-2 w-2 mt-2 rounded-full ${
+                    item.id === 1 ? 'bg-blue-500' : 
+                    item.id === 2 ? 'bg-green-500' : 
+                    item.id === 3 ? 'bg-purple-500' : 'bg-yellow-500'
+                  }`}></div>
+                  <div className="ml-3">
+                    <p className="text-sm">{item.text}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center mt-1">
+                      <Clock size={12} className="mr-1" /> {item.time}
+                    </p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
-              {/* Recent Activity */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Recent Posts */}
-                <div className="lg:col-span-2 bg-white p-5 rounded-lg border shadow-sm">
-                  <h3 className="font-semibold mb-4 flex items-center">
-                    <MessageSquare className="mr-2" size={18} />
-                    Derniers posts
-                  </h3>
-                  <div className="space-y-4">
-                    {recentPosts.map(post => (
-                      <div key={post.id} className={`p-3 rounded border ${
-                        post.reported ? 'border-red-200 bg-red-50' : 'border-gray-200'
+      {/* Bottom Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Upcoming Tournaments */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold flex items-center">
+              <Trophy className="text-yellow-500 mr-2" size={20} />
+              Upcoming Tournaments
+            </h2>
+            <button className="text-sm text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center">
+              View All
+              <ChevronRight size={16} className="ml-1" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {filteredTournaments.map(tournament => (
+              <div 
+                key={tournament.id} 
+                className={`p-4 rounded-lg border ${darkMode ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'} transition-colors`}
+              >
+                <div className="flex items-start">
+                  <img
+                    src={tournament.gameIcon}
+                    alt={tournament.game}
+                    className="w-12 h-12 rounded-lg object-cover mr-4"
+                  />
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="font-medium">{tournament.title}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">{tournament.game}</p>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs ${
+                        darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
                       }`}>
-                        <div className="flex justify-between">
-                          <h4 className="font-medium">{post.title}</h4>
-                          <span className="text-xs bg-gray-100 px-2 py-1 rounded">
-                            {post.game}
-                          </span>
-                        </div>
-                        <div className="flex justify-between mt-2 text-sm text-gray-500">
-                          <span>Par {post.author} · {post.date}</span>
-                          <div className="flex items-center">
-                            <ThumbsUp size={14} className="mr-1" />
-                            {post.likes}
-                            {post.reported && (
-                              <Flag size={14} className="ml-2 text-red-500" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Reported Content */}
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <h3 className="font-semibold mb-4 flex items-center">
-                    <Flag className="mr-2" size={18} />
-                    Signalements récents
-                  </h3>
-                  <div className="space-y-3">
-                    {reportedContent.map(item => (
-                      <div key={item.id} className="p-3 rounded border border-red-200 bg-red-50">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-                              {item.type}
-                            </span>
-                            <p className="mt-2 text-sm line-clamp-2">{item.content}</p>
-                          </div>
-                          <button className="text-xs bg-white border px-2 py-1 rounded hover:bg-gray-50">
-                            Voir
-                          </button>
-                        </div>
-                        <div className="flex justify-between mt-2 text-xs text-gray-500">
-                          <span>Par {item.author}</span>
-                          <span>{item.date}</span>
+                        {new Date(tournament.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      </span>
+                    </div>
+                    
+                    <div className="mt-3 grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Participants</p>
+                        <p className="text-sm font-medium">
+                          {tournament.participants}/{tournament.maxParticipants}
+                        </p>
+                        <div className="mt-1 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full">
+                          <div
+                            className="h-full bg-blue-500 rounded-full"
+                            style={{
+                              width: `${(tournament.participants / tournament.maxParticipants) * 100}%`
+                            }}
+                          ></div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          {activeTab === 'posts' && (
-            <div className="bg-white rounded-lg border shadow-sm">
-              <div className="p-5 border-b">
-                <h3 className="font-semibold">Tous les posts</h3>
-                <div className="mt-4 flex space-x-2">
-                  <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
-                    Tous
-                  </button>
-                  <button className="px-3 py-1 bg-white border rounded text-sm hover:bg-gray-50">
-                    Signalés
-                  </button>
-                  <button className="px-3 py-1 bg-white border rounded text-sm hover:bg-gray-50">
-                    Populaires
-                  </button>
-                </div>
-              </div>
-              
-              <div className="divide-y">
-                {allPosts.map(post => (
-                  <div key={post.id} className={`p-4 flex justify-between items-center ${
-                    post.reported ? 'bg-red-50' : ''
-                  }`}>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium truncate">{post.title}</h4>
-                      <div className="flex mt-1 text-sm text-gray-500">
-                        <span className="truncate">Par {post.author} · {post.date} · {post.game}</span>
+                      <div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Prize Pool</p>
+                        <p className="text-sm font-medium">{tournament.prizePool}</p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2 ml-4">
-                      <span className="flex items-center text-sm">
-                        <ThumbsUp size={14} className="mr-1" />
-                        {post.likes}
-                      </span>
-                      {post.reported && (
-                        <span className="text-red-500">
-                          <Flag size={16} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recent Discussions */}
+        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-xl shadow-lg`}>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-semibold flex items-center">
+              <MessageSquare className="text-green-500 mr-2" size={20} />
+              Recent Discussions
+            </h2>
+            <button className="text-sm text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center">
+              View All
+              <ChevronRight size={16} className="ml-1" />
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {filteredDiscussions.map(discussion => (
+              <div
+                key={discussion.id}
+                className={`p-4 rounded-lg border ${darkMode ? 'border-gray-700 hover:bg-gray-700/50' : 'border-gray-200 hover:bg-gray-50'} transition-colors`}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium truncate">{discussion.title}</h3>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {discussion.tags.map((tag, index) => (
+                        <span 
+                          key={index} 
+                          className={`px-2 py-1 rounded-full text-xs ${
+                            darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {tag}
                         </span>
-                      )}
-                      <button className="p-1 text-gray-500 hover:text-blue-600">
-                        <Edit size={16} />
-                      </button>
-                      <button className="p-1 text-gray-500 hover:text-red-600">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="p-4 border-t flex justify-between items-center">
-                <span className="text-sm text-gray-500">1-5 sur 189,403 posts</span>
-                <div className="flex space-x-2">
-                  <button className="px-3 py-1 bg-white border rounded text-sm hover:bg-gray-50">
-                    Précédent
-                  </button>
-                  <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
-                    Suivant
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'members' && (
-            <div className="bg-white rounded-lg border shadow-sm">
-              <div className="p-5 border-b">
-                <h3 className="font-semibold">Gestion des membres</h3>
-                <div className="mt-4 flex justify-between items-center">
-                  <div className="flex space-x-2">
-                    <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
-                      Tous
-                    </button>
-                    <button className="px-3 py-1 bg-white border rounded text-sm hover:bg-gray-50">
-                      Admins
-                    </button>
-                    <button className="px-3 py-1 bg-white border rounded text-sm hover:bg-gray-50">
-                      Modérateurs
-                    </button>
-                    <button className="px-3 py-1 bg-white border rounded text-sm hover:bg-gray-50">
-                      Bannis
-                    </button>
-                  </div>
-                  <button className="px-3 py-1 bg-green-600 text-white rounded text-sm flex items-center">
-                    <Users size={16} className="mr-1" />
-                    Nouveau membre
-                  </button>
-                </div>
-              </div>
-              
-              <div className="divide-y">
-                {members.map(member => (
-                  <div key={member.id} className="p-4 flex justify-between items-center">
-                    <div className="flex items-center space-x-4 flex-1 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium">
-                        {member.username.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="font-medium truncate">{member.username}</h4>
-                        <p className="text-sm text-gray-500 truncate">{member.email}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="hidden md:block text-sm text-gray-500">
-                      Inscrit le {member.joinDate}
-                    </div>
-                    
-                    <div className="flex items-center space-x-2 ml-4">
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        member.role === 'Admin' ? 'bg-purple-100 text-purple-800' :
-                        member.role === 'Modérateur' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {member.role}
-                      </span>
-                      <span className={`px-2 py-1 rounded text-xs ${
-                        member.status === 'active' ? 'bg-green-100 text-green-800' :
-                        'bg-red-100 text-red-800'
-                      }`}>
-                        {member.status === 'active' ? 'Actif' : 'Banni'}
-                      </span>
-                      
-                      <div className="flex space-x-1">
-                        <button className="p-1 text-gray-500 hover:text-blue-600">
-                          <Mail size={16} />
-                        </button>
-                        <button className="p-1 text-gray-500 hover:text-yellow-600">
-                          <Edit size={16} />
-                        </button>
-                        {member.status === 'active' ? (
-                          <button className="p-1 text-gray-500 hover:text-red-600">
-                            <Ban size={16} />
-                          </button>
-                        ) : (
-                          <button className="p-1 text-gray-500 hover:text-green-600">
-                            <Check size={16} />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="p-4 border-t flex justify-between items-center">
-                <span className="text-sm text-gray-500">1-3 sur 24,591 membres</span>
-                <div className="flex space-x-2">
-                  <button className="px-3 py-1 bg-white border rounded text-sm hover:bg-gray-50">
-                    Précédent
-                  </button>
-                  <button className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
-                    Suivant
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'reports' && (
-            <div className="space-y-6">
-              <div className="bg-white p-5 rounded-lg border shadow-sm">
-                <h3 className="font-semibold mb-4 flex items-center">
-                  <Flag className="mr-2" size={18} />
-                  Signalements en attente
-                </h3>
-                <div className="space-y-3">
-                  {reportedContent.map(item => (
-                    <div key={item.id} className="p-4 rounded border border-red-200 bg-red-50">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs bg-red-100 text-red-800 px-2 py-1 rounded">
-                              {item.type}
-                            </span>
-                            <span className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded">
-                              {item.reason}
-                            </span>
-                          </div>
-                          <p className="mt-2 text-sm">{item.content}</p>
-                          <div className="flex justify-between mt-2 text-xs text-gray-500">
-                            <span>Par {item.author} · {item.date}</span>
-                          </div>
-                        </div>
-                        <div className="flex space-x-2 ml-4">
-                          <button className="px-3 py-1 bg-white border border-green-500 text-green-500 rounded text-sm hover:bg-green-50 flex items-center">
-                            <Check size={14} className="mr-1" />
-                            Approuver
-                          </button>
-                          <button className="px-3 py-1 bg-white border border-red-500 text-red-500 rounded text-sm hover:bg-red-50 flex items-center">
-                            <X size={14} className="mr-1" />
-                            Rejeter
-                          </button>
-                          <button className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 flex items-center">
-                            <Trash2 size={14} className="mr-1" />
-                            Supprimer
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="bg-white p-5 rounded-lg border shadow-sm">
-                <h3 className="font-semibold mb-4">Statistiques des signalements</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-blue-50 p-4 rounded border border-blue-100">
-                    <h4 className="text-sm text-blue-800">Signalements ce mois</h4>
-                    <p className="text-2xl font-bold mt-1">124</p>
-                    <p className="text-green-500 text-xs mt-1">+15% vs mois dernier</p>
-                  </div>
-                  <div className="bg-red-50 p-4 rounded border border-red-100">
-                    <h4 className="text-sm text-red-800">Contenu supprimé</h4>
-                    <p className="text-2xl font-bold mt-1">87</p>
-                    <p className="text-green-500 text-xs mt-1">62% des signalements</p>
-                  </div>
-                  <div className="bg-green-50 p-4 rounded border border-green-100">
-                    <h4 className="text-sm text-green-800">Temps moyen de traitement</h4>
-                    <p className="text-2xl font-bold mt-1">22 min</p>
-                    <p className="text-red-500 text-xs mt-1">+5 min vs mois dernier</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'moderation' && (
-            <div className="space-y-6">
-              <div className="bg-white p-5 rounded-lg border shadow-sm">
-                <h3 className="font-semibold mb-4 flex items-center">
-                  <Shield className="mr-2" size={18} />
-                  Actions récentes de modération
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modérateur</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cible</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Raison</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {moderationActions.map(action => (
-                        <tr key={action.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{action.action}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{action.moderator}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{action.target}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{action.reason}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{action.date}</td>
-                        </tr>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <h3 className="font-semibold mb-4">Modérateurs actifs</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-800">
-                          M
-                        </div>
-                        <span className="font-medium">ModeratorPro</span>
-                      </div>
-                      <span className="text-sm text-green-600">En ligne</span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-gray-50 rounded">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-800">
-                          G
-                        </div>
-                        <span className="font-medium">GameMaster</span>
-                      </div>
-                      <span className="text-sm text-gray-500">Hors ligne</span>
                     </div>
                   </div>
+                  <button className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 ml-2">
+                    <MoreHorizontal size={18} />
+                  </button>
                 </div>
-
-                <div className="bg-white p-5 rounded-lg border shadow-sm">
-                  <h3 className="font-semibold mb-4">Ajouter un modérateur</h3>
-                  <div className="space-y-3">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                      <input
-                        type="text"
-                        placeholder="Rechercher un membre..."
-                        className="pl-10 pr-4 py-2 w-full border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      />
-                    </div>
-                    <button className="w-full py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">
-                      Attribuer les droits
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'settings' && (
-            <div className="space-y-6">
-              <div className="bg-white p-5 rounded-lg border shadow-sm">
-                <h3 className="font-semibold mb-6">Paramètres du forum</h3>
                 
-                {forumSettings.map((category, index) => (
-                  <div key={index} className="mb-6 last:mb-0">
-                    <h4 className="text-lg font-medium mb-4 flex items-center">
-                      {category.category === 'Général' && <Globe className="mr-2" size={18} />}
-                      {category.category === 'Modération' && <Shield className="mr-2" size={18} />}
-                      {category.category === 'Sécurité' && <Lock className="mr-2" size={18} />}
-                      {category.category}
-                    </h4>
-                    
-                    <div className="space-y-3">
-                      {category.settings.map((setting, sIndex) => (
-                        <div key={sIndex} className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded hover:bg-gray-50">
-                          <div className="mb-2 sm:mb-0">
-                            <h5 className="font-medium">{setting.name}</h5>
-                            {setting.editable && (
-                              <p className="text-sm text-gray-500">Cliquez pour modifier</p>
-                            )}
-                          </div>
-                          <div className="flex items-center">
-                            <span className={`px-3 py-1 rounded text-sm ${
-                              setting.editable ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
-                            }`}>
-                              {setting.value}
-                            </span>
-                            {setting.editable && (
-                              <button className="ml-2 p-1 text-gray-500 hover:text-blue-600">
-                                <Edit size={16} />
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <div className="flex items-center text-gray-600 dark:text-gray-400">
+                    <span className="font-medium text-gray-800 dark:text-gray-200 mr-2">{discussion.author}</span>
+                    <span>in</span>
+                    <span className="font-medium ml-1">{discussion.game}</span>
+                  </div>
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      <MessageSquare size={14} className="mr-1" />
+                      <span>{discussion.replies}</span>
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                      <Calendar size={12} className="mr-1" />
+                      {discussion.timeAgo}
                     </div>
                   </div>
-                ))}
-              </div>
-
-              <div className="bg-white p-5 rounded-lg border shadow-sm">
-                <h3 className="font-semibold mb-4">Actions avancées</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <button className="p-4 border rounded hover:bg-gray-50 flex flex-col items-center">
-                    <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center text-red-600 mb-2">
-                      <Trash2 size={20} />
-                    </div>
-                    <span className="font-medium">Vider le cache</span>
-                    <span className="text-sm text-gray-500">Supprime les données temporaires</span>
-                  </button>
-                  <button className="p-4 border rounded hover:bg-gray-50 flex flex-col items-center">
-                    <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center text-yellow-600 mb-2">
-                      <FileText size={20} />
-                    </div>
-                    <span className="font-medium">Sauvegarde</span>
-                    <span className="text-sm text-gray-500">Créer une sauvegarde complète</span>
-                  </button>
                 </div>
               </div>
-            </div>
-          )}
-        </main>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+interface StatCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string | number;
+  change: number;
+  darkMode: boolean;
+}
+
+const StatCard: React.FC<StatCardProps> = ({ icon, title, value, change, darkMode }) => {
+  return (
+    <div className={`p-4 rounded-xl shadow-sm ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+      <div className="flex justify-between items-start">
+        <div>
+          <p className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{title}</p>
+          <p className="text-2xl font-bold mt-1">{value}</p>
+        </div>
+        <div className={`p-2 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+          {icon}
+        </div>
+      </div>
+      <div className={`mt-3 text-sm flex items-center ${
+        change >= 0 ? 'text-green-500' : 'text-red-500'
+      }`}>
+        {change >= 0 ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
+        <span className="ml-1">{Math.abs(change)}% from last week</span>
       </div>
     </div>
   );
