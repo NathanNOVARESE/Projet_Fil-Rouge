@@ -45,13 +45,6 @@ const TrendsPage: React.FC = () => {
   ];
 
   // Mock data for trending categories
-  const trendingCategories = [
-    { name: "FPS", count: 1234 },
-    { name: "MOBA", count: 987 },
-    { name: "Battle Royale", count: 876 },
-    { name: "RPG", count: 654 },
-    { name: "Stratégie", count: 543 }
-  ];
 
   return (
     <div className={`p-6 ${darkMode ? 'text-white' : ' text-gray-900'}`}>
@@ -69,7 +62,7 @@ const TrendsPage: React.FC = () => {
       {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Trending topics section */}
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
           <h2 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-4">Sujets populaires</h2>
           <div className="space-y-4">
             {trendingTopics.map((topic, index) => (
@@ -113,32 +106,8 @@ const TrendsPage: React.FC = () => {
             ))}
           </div>
         </div>
-
-        {/* Trending categories section */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Catégories populaires</h2>
-          <div className={`${
-            darkMode ? 'bg-gray-800' : 'bg-white'
-          } p-4 rounded-lg shadow`}>
-            {trendingCategories.map((category, index) => (
-              <div 
-                key={index}
-                className={`flex justify-between items-center py-3 ${
-                  index !== trendingCategories.length - 1 ? 'border-b dark:border-gray-700' : ''
-                }`}
-              >
-                <span>{category.name}</span>
-                <span className={`px-2 py-1 rounded-full text-sm ${
-                  darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
-                }`}>
-                  {category.count}
-                </span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
-    </div>
   );
 };
 

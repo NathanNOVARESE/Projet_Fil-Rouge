@@ -190,15 +190,20 @@ const GameForum: React.FC = () => {
       
       {/* Recent activity section */}
       <section>
-        <h2 className="text-2xl font-semibold mb-4">Activité récente</h2>
-        <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 rounded-lg shadow`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentActivities.map((activity, index) => (
-              <div key={index} className="p-4 border border-gray-200 dark:border-gray-700 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                <p>{activity}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Il y a 2 heures</p>
-              </div>
-            ))}
+        <h2 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-2">Activité récente</h2>
+        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {recentActivities.map((activity, index) => (
+          <div 
+        key={index} 
+        className={`p-6 rounded-lg shadow-md border ${
+          darkMode ? 'border-gray-700 bg-gray-800 hover:bg-gray-800' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+        } transition-transform transform hover:scale-105`}
+          >
+        <p className="text-lg font-medium">{activity}</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Il y a 2 heures</p>
+          </div>
+        ))}
           </div>
         </div>
       </section>
