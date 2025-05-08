@@ -47,23 +47,10 @@ cd gameforum
 npm install
 ```
 
-3. Create a `.env` file in the root directory:
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
-
-4. Start the development server:
+3. Start the development server:
 ```bash
 npm run dev
 ```
-
-### Database Setup
-
-1. Create a new Supabase project
-2. Run the database migrations:
-   - Navigate to the SQL editor in your Supabase dashboard
-   - Execute the migrations in the `supabase/migrations` folder
 
 ## Project Structure
 
