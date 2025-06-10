@@ -1,0 +1,61 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int      @id @default(autoincrement())
+  username   String   @unique
+  email      String   @unique
+  password   String
+  isAdmin    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  forums     Forum[]
+  topics     Topic[]
+  posts      Post[]
+}
+
+model Forum {
+  id         Int      @id @default(autoincrement())
+  title      String
+  description String?
+  createdAt  DateTime @default(now())
+  ownerId    Int
+  owner      User     @relation(fields: [ownerId], references: [id])
+  topics     Topic[]
+}
+
+model Topic {
+  id         Int      @id @default(autoincrement())
+  title      String
+  createdAt  DateTime @default(now())
+  forumId    Int
+  createdBy  Int
+  forum      Forum    @relation(fields: [forumId], references: [id])
+  user       User     @relation(fields: [createdBy], references: [id])
+  posts      Post[]
+}
+
+model Post {
+  id         Int      @id @default(autoincrement())
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime?
+  topicId    Int
+  authorId   Int
+  topic      Topic    @relation(fields: [topicId], references: [id])
+  author     User     @relation(fields: [authorId], references: [id])
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
