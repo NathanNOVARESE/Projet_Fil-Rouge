@@ -19,50 +19,38 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
   // Function to handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent page reload
-    setLoading(true); // Enable loading state
-    setError(null); // Reset errors
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
-      // Simulate an API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      let response, data;
       if (mode === 'register') {
-        // Validate email
-        if (!email.includes('@')) {
-          throw new Error('Please enter a valid email address');
-        }
-
-        // Validate password length
-        if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters long');
-        }
-
-        // Simulate user registration
-        const newUser = {
-          id: `user-${Date.now()}`,
-          email,
-          name: name || email.split('@')[0], // Use the name or the part before '@' in the email
-        };
-
-        setUser(newUser); // Update the user in the global store
-        navigate('/'); // Redirect to the home page
+        response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: name || email.split('@')[0], email, password }),
+        });
       } else {
-        // Simulate user login
-        const mockUser = {
-          id: `user-${Date.now()}`,
-          email,
-          name: email.split('@')[0],
-        };
-
-        setUser(mockUser); // Update the user in the global store
-        navigate('/'); // Redirect to the home page
+        response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
       }
+
+      // Vérifie que la réponse est bien du JSON
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      data = isJson ? await response.json() : {};
+      if (!response.ok) throw new Error(data.error || (mode === 'register' ? 'Registration failed' : 'Login failed'));
+
+      setUser(data.user);
+      if (data.token) localStorage.setItem('token', data.token);
+      navigate('/');
     } catch (err: any) {
-      // Handle errors
       setError(err.message || 'An error occurred. Please try again.');
     } finally {
-      setLoading(false); // Disable loading state
+      setLoading(false);
     }
   };
 

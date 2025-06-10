@@ -1,11 +1,43 @@
 import express from 'express';
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
+
+// --- ROUTES AUTH ---
+const SECRET = process.env.JWT_SECRET || 'supersecret';
+
+// Inscription
+app.post('/api/auth/register', async (req, res) => {
+  const { username, email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis.' });
+  try {
+    const hashed = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: { username, email, password: hashed }
+    });
+    res.json({ message: 'Utilisateur créé', user });
+  } catch (error) {
+    res.status(400).json({ error: 'Utilisateur ou email déjà pris.' });
+  }
+});
+
+// Connexion
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis.' });
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+  }
+  const token = jwt.sign({ userId: user.id }, SECRET, { expiresIn: '1d' });
+  res.json({ token, user });
+});
 
 // Utilisateurs
 app.get('/users', async (req, res) => {

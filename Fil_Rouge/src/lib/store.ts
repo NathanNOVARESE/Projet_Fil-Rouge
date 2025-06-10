@@ -1,11 +1,7 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { User } from '../types/User';
 import { Priority } from '@prisma/client';
-
-export type User = {
-  id: string;
-  email: string;
-  name?: string;
-};
 
 export type Task = {
   id: string;
@@ -24,40 +20,48 @@ export type Tag = {
   color: string;
 };
 
-type AppState = {
+interface StoreState {
   user: User | null;
+  setUser: (user: User | null) => void;
   darkMode: boolean;
+  toggleDarkMode: () => void;
   tasks: Task[];
   loading: boolean;
   error: string | null;
   
-  setUser: (user: User | null) => void;
-  toggleDarkMode: () => void;
   setTasks: (tasks: Task[]) => void;
   addTask: (task: Task) => void;
   updateTask: (task: Task) => void;
   deleteTask: (id: string) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
-};
+}
 
-export const useStore = create<AppState>((set) => ({
-  user: null,
-  darkMode: false,
-  tasks: [],
-  loading: false,
-  error: null,
-  
-  setUser: (user) => set({ user }),
-  toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
-  setTasks: (tasks) => set({ tasks }),
-  addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
-  updateTask: (task) => set((state) => ({ 
-    tasks: state.tasks.map((t) => (t.id === task.id ? task : t)) 
-  })),
-  deleteTask: (id) => set((state) => ({ 
-    tasks: state.tasks.filter((t) => t.id !== id) 
-  })),
-  setLoading: (loading) => set({ loading }),
-  setError: (error) => set({ error }),
-}));
+export const useStore = create<StoreState>()(
+  persist(
+    (set) => ({
+      user: null,
+      setUser: (user) => set({ user }),
+      darkMode: false,
+      toggleDarkMode: () => set((state) => ({ darkMode: !state.darkMode })),
+      tasks: [],
+      loading: false,
+      error: null,
+      
+      setTasks: (tasks) => set({ tasks }),
+      addTask: (task) => set((state) => ({ tasks: [...state.tasks, task] })),
+      updateTask: (task) => set((state) => ({ 
+        tasks: state.tasks.map((t) => (t.id === task.id ? task : t)) 
+      })),
+      deleteTask: (id) => set((state) => ({ 
+        tasks: state.tasks.filter((t) => t.id !== id) 
+      })),
+      setLoading: (loading) => set({ loading }),
+      setError: (error) => set({ error }),
+    }),
+    {
+      name: 'gameforum-store', // nom de la clé dans le localStorage
+      partialize: (state) => ({ user: state.user, darkMode: state.darkMode }),
+    }
+  )
+);

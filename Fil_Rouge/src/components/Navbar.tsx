@@ -1,24 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { Moon, Sun, Bell, User, LogOut, Menu } from 'lucide-react';
 import { Joystick, Search } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const { user, darkMode, toggleDarkMode, setUser } = useStore();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // État pour la Sidebar mobile
+  const { user, setUser, darkMode, toggleDarkMode } = useStore();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(true);
+
+  // Variable booléenne qui change selon la connexion
+  const isLoggedIn = !!user;
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!user && token) {
+      fetch('/api/users/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.user) setUser(data.user);
+          setLoadingUser(false);
+        });
+    } else {
+      setLoadingUser(false);
+    }
+  }, [user, setUser]);
+
+  useEffect(() => {
+    console.log('user:', user);
+  }, [user]);
 
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem('token');
+    localStorage.removeItem('gameforum-store');
+    window.location.reload();
   };
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  // Pour fermer le menu si on clique ailleurs
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        dropdownRef.current.style.display = 'none';
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <>
-      {/* Navbar */}
       <nav
         className={`px-4 py-3 ${
           darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
@@ -27,7 +68,7 @@ const Navbar: React.FC = () => {
         <div className="container mx-auto flex justify-between items-center">
           <Link
             to="/"
-            className="text-xl font-bold flex items-center space-x-0.2 ml-6"
+            className="text-xl font-bold flex items-center space-x-0.5 ml-6"
           >
             <Joystick size={30} />
             <span className="text-blue-500">Game</span>
@@ -49,13 +90,12 @@ const Navbar: React.FC = () => {
               </button>
             </div>
           </div>
+
           <div className="flex items-center space-x-4">
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label={
-                darkMode ? 'Switch to light mode' : 'Switch to dark mode'
-              }
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {darkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
@@ -67,39 +107,31 @@ const Navbar: React.FC = () => {
               <Bell size={20} />
             </button>
 
-            {user ? (
-              <div className="flex items-center space-x-2">
-                <div className="hidden md:block"></div>
-                <div className="relative">
-                  <button
-                    className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300"
-                    onClick={() => {
-                      const dropdown = document.getElementById(
-                        'profile-dropdown'
-                      );
-                      if (dropdown) {
-                        dropdown.style.display =
-                          dropdown.style.display === 'block' ? 'none' : 'block';
-                      }
-                    }}
-                  >
-                    <User size={20} />
-                  </button>
-                  <div
-                    id="profile-dropdown"
-                    className="absolute right-[-40%] mt-2 w-48 bg-white dark:bg-gray-800 rounded shadow-lg py-2 z-20 hidden"
-                  >
+            {/* Menu déroulant profil */}
+            <div className="relative">
+              <button
+                className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300"
+                onClick={() => {
+                  if (dropdownRef.current) {
+                    dropdownRef.current.style.display =
+                      dropdownRef.current.style.display === 'block' ? 'none' : 'block';
+                  }
+                }}
+              >
+                <User size={20} />
+              </button>
+              <div
+                ref={dropdownRef}
+                id="profile-dropdown"
+                className="absolute right-[-40%] mt-2 w-48 bg-white dark:bg-gray-800 rounded shadow-lg py-2 z-20 hidden"
+              >
+                {loadingUser ? null : isLoggedIn ? (
+                  <>
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
-                      Profile
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      Settings
+                      Profil
                     </Link>
                     <button
                       onClick={handleLogout}
@@ -110,25 +142,25 @@ const Navbar: React.FC = () => {
                         <span>Logout</span>
                       </div>
                     </button>
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      className="block px-4 py-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-md"
+                    >
+                      Se connecter
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="block px-4 py-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-md"
+                    >
+                      S'inscrire
+                    </Link>
+                  </>
+                )}
               </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link
-                  to="/login"
-                  className="px-4 py-2 rounded text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                >
-                  Sign Up
-                </Link>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       </nav>
