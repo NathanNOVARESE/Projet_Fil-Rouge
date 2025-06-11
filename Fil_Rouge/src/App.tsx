@@ -18,21 +18,8 @@ import ForumTchat from './pages/ForumTchat';
 import { useStore } from './lib/store';
 
 function App() {
-  const { darkMode, user, setUser } = useStore();
+  const { darkMode } = useStore();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // Simulate authenticated user for demo purposes
-  useEffect(() => {
-    if (!user && !location.pathname.includes('/login') && !location.pathname.includes('/register')) {
-      // Set demo user for easy testing
-      setUser({
-        id: 'user-123',
-        email: 'demo@example.com',
-        name: 'Demo User',
-      });
-    }
-  }, [user, location.pathname, setUser]);
 
   return (
     <div className={darkMode ? 'dark' : ''}>

@@ -3,6 +3,8 @@ import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import path from 'path';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -51,6 +53,25 @@ app.post('/users', async (req, res) => {
     data: { email, name, password }
   });
   res.json(user);
+});
+
+app.get('/api/users/me', (req, res) => {
+  const user = getUserFromToken(req); // ta vraie logique d'authentification
+  if (!user) {
+    return res.status(401).json({ user: null });
+  }
+  res.json({ user });
+});
+
+app.put('/api/users/me', async (req, res) => {
+  const user = await getUserFromToken(req);
+  if (!user) return res.status(401).json({ error: 'Non autorisé' });
+  const { name, email, bio, avatar, banner } = req.body;
+  const updated = await prisma.user.update({
+    where: { id: user.id },
+    data: { name, email, bio, avatar, banner }
+  });
+  res.json({ user: updated });
 });
 
 // Forums
@@ -135,6 +156,14 @@ app.delete('/posts/:id', async (req, res) => {
   const { id } = req.params;
   await prisma.post.delete({ where: { id } });
   res.json({ message: 'Post supprimé' });
+});
+
+// --- ROUTES UPLOAD ---
+const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
+
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'Aucun fichier' });
+  res.json({ url: `/uploads/${req.file.filename}` });
 });
 
 const PORT = 3001;

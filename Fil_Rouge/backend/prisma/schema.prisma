@@ -57,8 +57,8 @@ model Post {
   author     User     @relation(fields: [authorId], references: [id])
 }
 
-enum Priority {
-  LOW
-  MEDIUM
-  HIGH
+model Task {
+  id       Int      @id @default(autoincrement())
+  title    String
+  priority String   // Utilise String à la place de l'enum
 }

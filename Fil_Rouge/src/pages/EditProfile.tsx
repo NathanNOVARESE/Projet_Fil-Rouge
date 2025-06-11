@@ -3,14 +3,14 @@ import { useStore } from '../lib/store';
 import { Mail, Calendar, Trophy, TowerControl as GameController, MessageSquare, Star, Edit, Save, X } from 'lucide-react';
 
 const EditProfile: React.FC = () => {
-  const { user, darkMode } = useStore();
+  const { user, darkMode, setUser } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    bio: user?.bio || 'Je suis un passionné de jeux vidéo compétitifs.',
-    avatar: 'https://thispersondoesnotexist.com/',
-    banner: 'https://i.pinimg.com/736x/79/d2/60/79d260fd171398929f1c8c2cbc935c90.jpg'
+    bio: user?.bio || '',
+    avatar: user?.avatar || '',
+    banner: user?.banner || ''
   });
 
   // Mock data
@@ -55,9 +55,38 @@ const EditProfile: React.FC = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Sauvegarder les modifications
-    setIsEditing(false);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    // Vérifie format/taille ici...
+    // Upload vers backend
+    const form = new FormData();
+    form.append('file', file);
+    form.append('type', type);
+    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    if (!res.ok) return alert('Erreur upload');
+    const data = await res.json();
+    setFormData(prev => ({ ...prev, [type]: data.url }));
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/users/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      if (!res.ok) throw new Error('Erreur lors de la sauvegarde');
+      const data = await res.json();
+      setUser(data.user); // Mets à jour le store avec le nouvel utilisateur
+      setIsEditing(false);
+    } catch (err) {
+      alert('Erreur lors de la sauvegarde du profil');
+    }
   };
 
   if (!user) {
@@ -78,18 +107,41 @@ const EditProfile: React.FC = () => {
   return (
     <div className={`p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg overflow-hidden`}>
-        {/* Banner editable */}
+        {/* Avatar */}
+        <div className="relative group">
+          <div className="w-24 h-24 rounded-full border-4 border-white dark:border-gray-800 overflow-hidden bg-gray-100">
+            <img
+              src={formData.avatar}
+              alt="Profile"
+              className="w-full h-full object-cover"
+            />
+          </div>
+          {isEditing && (
+            <input
+              type="url"
+              name="avatar"
+              value={formData.avatar}
+              onChange={handleInputChange}
+              placeholder="URL de la photo de profil"
+              className="mt-2 w-full text-xs border-b border-blue-500 bg-transparent"
+            />
+          )}
+        </div>
+
+        {/* Bannière */}
         <div 
           className="h-48 bg-cover bg-center relative group"
           style={{ backgroundImage: `url(${formData.banner})` }}
         >
           {isEditing && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-              <button className="px-4 py-2 bg-white/90 text-black rounded-lg flex items-center">
-                <Edit size={16} className="mr-2" />
-                Changer la bannière
-              </button>
-            </div>
+            <input
+              type="url"
+              name="banner"
+              value={formData.banner}
+              onChange={handleInputChange}
+              placeholder="URL de la bannière"
+              className="absolute bottom-2 left-1/2 -translate-x-1/2 w-2/3 text-xs border-b border-blue-500 bg-white/80 px-2 py-1 rounded"
+            />
           )}
           <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/50 to-transparent"></div>
         </div>

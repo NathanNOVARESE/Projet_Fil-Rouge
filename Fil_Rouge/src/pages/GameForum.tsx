@@ -26,9 +26,8 @@ const GameForum: React.FC = () => {
   if (!user) {
     return (
       <div className="text-center py-10 space-y-6">
-        <div className={`p-4 rounded-lg  ${darkMode ? 'bg-gray-800' : 'bg-white'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'} shadow`}>
-          <h1 className="text-2xl font-bold mb-4">Bienvenue sur GameForum</h1>
-          <p className="text-gray-600 dark:text-gray-300">Lorem630</p>
+        <div className={`p-4 min-h-[120px] rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'} shadow flex justify-center items-center`}>
+          <h1 className="text-2xl font-bold text-blue-500 text-center w-full">Bienvenue sur GameForum</h1>
         </div>  
         <p className="mb-6">Connectez-vous pour rejoindre la communauté.</p>
         <div className="flex justify-center space-x-4">
