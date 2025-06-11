@@ -10,6 +10,7 @@ const app = express();
 const prisma = new PrismaClient();
 
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 // --- ROUTES AUTH ---
 const SECRET = process.env.JWT_SECRET || 'supersecret';
@@ -55,23 +56,51 @@ app.post('/users', async (req, res) => {
   res.json(user);
 });
 
-app.get('/api/users/me', (req, res) => {
-  const user = getUserFromToken(req); // ta vraie logique d'authentification
-  if (!user) {
+app.get('/api/users/me', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ user: null });
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!user) return res.status(404).json({ user: null });
+    res.json({ user });
+  } catch (err) {
     return res.status(401).json({ user: null });
   }
-  res.json({ user });
 });
 
 app.put('/api/users/me', async (req, res) => {
-  const user = await getUserFromToken(req);
-  if (!user) return res.status(401).json({ error: 'Non autorisé' });
-  const { name, email, bio, avatar, banner } = req.body;
-  const updated = await prisma.user.update({
-    where: { id: user.id },
-    data: { name, email, bio, avatar, banner }
-  });
-  res.json({ user: updated });
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'Token manquant' });
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    const userId = decoded.userId;
+    const { username, email, bio, avatar, banner } = req.body;
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { username, email, bio, avatar, banner }
+    });
+    res.json({ user: updatedUser });
+  } catch (err) {
+    return res.status(401).json({ error: 'Token invalide' });
+  }
+});
+
+// Route pour modifier les informations d'un utilisateur par son id (admin ou user lui-même)
+app.put('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  const { username, email, bio, avatar, banner, isAdmin } = req.body;
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: Number(id) || id },
+      data: { username, email, bio, avatar, banner, isAdmin }
+    });
+    res.json({ user: updatedUser });
+  } catch (err) {
+    res.status(400).json({ error: "Impossible de mettre à jour l'utilisateur" });
+  }
 });
 
 // Forums
@@ -166,7 +195,14 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
   res.json({ url: `/uploads/${req.file.filename}` });
 });
 
+// Permet d'accéder aux images uploadées via une URL
+app.get('/uploads/:filename', (req, res) => {
+  const filePath = path.join(process.cwd(), 'uploads', req.params.filename);
+  res.sendFile(filePath);
+});
+
 const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Serveur backend lancé sur http://localhost:${PORT}`);
 });
+

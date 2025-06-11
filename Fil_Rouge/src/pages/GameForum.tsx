@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { useNavigate } from 'react-router-dom';
-import { UserRound,UserRoundPlus ,  MessageCircle, Trophy, User } from 'lucide-react';
+import { UserRound, UserRoundPlus, MessageCircle, Trophy } from 'lucide-react';
 
 const GameForum: React.FC = () => {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ const GameForum: React.FC = () => {
         
         {/* Featured games section */}
         <section className="mb-12">
-          <h3 className="text-3xl font-semibold mb-6 inline-block border-b-4 border-gray-300 pb-2">Jeux en vedette</h3>
+          <h3 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-2">Jeux en vedette</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ">
             {featuredGames.map((game, index) => {
               const gameImages: { [key: string]: string } = {

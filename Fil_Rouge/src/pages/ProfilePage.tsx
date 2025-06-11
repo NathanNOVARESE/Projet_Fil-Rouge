@@ -6,6 +6,7 @@ import type { User } from '../types/User';
 
 const MAX_SIZE_MB = 5;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const BACKEND_URL = "http://localhost:3001";
 
 // Component for editing the profile
 const EditProfile: React.FC = () => {
@@ -139,7 +140,8 @@ const EditProfile: React.FC = () => {
     });
     if (!res.ok) throw new Error('Erreur upload');
     const data = await res.json();
-    return data.url; // Lien public de l’image stockée
+    // Retourne l’URL complète
+    return `${BACKEND_URL}${data.url}`;
   };
 
   // --- SAUVEGARDE DU PROFIL ---
@@ -176,7 +178,13 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  // If no user is logged in, display a message
+  const getFullImageUrl = (url: string | undefined | null) => {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/uploads/')) return `${BACKEND_URL}${url}`;
+    return url;
+  };
+
   if (!user) {
     return (
       <div className="text-center py-10">
@@ -200,7 +208,11 @@ const EditProfile: React.FC = () => {
         <div
           className="h-48 bg-cover bg-center relative group cursor-pointer"
           style={{
-            backgroundImage: `url(${bannerPreview || formData.banner || user.banner || ''})`
+            backgroundImage: `url(${
+              bannerPreview ||
+              getFullImageUrl(formData.banner) ||
+              getFullImageUrl(user.banner)
+            })`
           }}
           onClick={() => isEditing && bannerInputRef.current?.click()}
         >
@@ -225,7 +237,11 @@ const EditProfile: React.FC = () => {
                 onClick={() => isEditing && avatarInputRef.current?.click()}
               >
                 <img
-                  src={avatarPreview || formData.avatar || user.avatar || ''}
+                  src={
+                    avatarPreview ||
+                    getFullImageUrl(formData.avatar) ||
+                    getFullImageUrl(user.avatar)
+                  }
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
@@ -285,13 +301,42 @@ const EditProfile: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <button 
-                onClick={() => setIsEditing(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700 transition-colors"
-              >
-                <Edit size={16} className="mr-2" />
-                Modifier le profil
-              </button>
+              <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
+                <button 
+                  onClick={() => setIsEditing(true)}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700 transition-colors"
+                >
+                  <Edit size={16} className="mr-2" />
+                  Modifier le profil
+                </button>
+                {/* Admin button, visible only for non-admin users */}
+                {!user.isAdmin && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('token');
+                        const res = await fetch(`${BACKEND_URL}/api/users/${user.id}`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}`
+                          },
+                          body: JSON.stringify({ isAdmin: true })
+                        });
+                        if (!res.ok) throw new Error('Erreur lors du changement de rôle');
+                        const data = await res.json();
+                        setUser(data.user);
+                        alert('Ce compte est maintenant administrateur.');
+                      } catch (err) {
+                        alert('Erreur lors du changement de rôle');
+                      }
+                    }}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center hover:bg-purple-700 transition-colors mt-4"
+                  >
+                    Passer ce compte en administrateur
+                  </button>
+                )}
+              </div>
             )}
           </div>
         </div>
