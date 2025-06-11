@@ -34,7 +34,7 @@ const ForumChat: React.FC = () => {
     {
       id: 3,
       user: {
-        name: user?.name || "Vous", // Use the current user's name or a default value
+        name: user?.username || "Vous", // Use the current user's username or a default value
         avatar: user?.avatar || "https://thispersondoesnotexist.com/",
         role: "Membre"
       },
@@ -54,7 +54,7 @@ const ForumChat: React.FC = () => {
     const message = {
       id: messages.length + 1, // Generate a new ID for the message
       user: {
-        name: user?.name || "Vous",
+        name: user?.username || "Vous",
         avatar: user?.avatar || "https://thispersondoesnotexist.com/",
         role: "Membre"
       },

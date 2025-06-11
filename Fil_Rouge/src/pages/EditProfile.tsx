@@ -6,7 +6,7 @@ const EditProfile: React.FC = () => {
   const { user, darkMode, setUser } = useStore();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || '',
+    username: user?.username || '',
     email: user?.email || '',
     bio: user?.bio || '',
     avatar: user?.avatar || '',
@@ -167,13 +167,13 @@ const EditProfile: React.FC = () => {
                 {isEditing ? (
                   <input
                     type="text"
-                    name="name"
-                    value={formData.name}
+                    name="username"
+                    value={formData.username}
                     onChange={handleInputChange}
                     className="text-2xl font-bold bg-transparent border-b border-blue-500 focus:outline-none"
                   />
                 ) : (
-                  <h1 className="text-2xl font-bold">{formData.name}</h1>
+                  <h1 className="text-2xl font-bold">{formData.username}</h1>
                 )}
                 <p className="text-gray-600 dark:text-gray-400 flex items-center">
                   <Trophy size={16} className="mr-1 text-yellow-500" />

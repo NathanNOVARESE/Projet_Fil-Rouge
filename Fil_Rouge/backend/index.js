@@ -5,12 +5,18 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
+import cors from 'cors';
+import mongoose from 'mongoose';
 
 const app = express();
 const prisma = new PrismaClient();
 
+app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+
+// Connexion à MongoDB
+mongoose.connect('mongodb://localhost:27017/filrouge', { useNewUrlParser: true, useUnifiedTopology: true });
 
 // --- ROUTES AUTH ---
 const SECRET = process.env.JWT_SECRET || 'supersecret';
@@ -103,6 +109,43 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
+app.put('/api/users/me/password', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'Token manquant' });
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    const userId = decoded.userId;
+    const { currentPassword, newPassword } = req.body;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    const valid = await bcrypt.compare(currentPassword, user.password);
+    if (!valid) return res.status(400).json({ error: 'Mot de passe actuel incorrect' });
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashed }
+    });
+    res.json({ message: 'Mot de passe mis à jour' });
+  } catch (err) {
+    res.status(401).json({ error: 'Token invalide' });
+  }
+});
+
+// Récupérer les infos d'un utilisateur par son id
+app.get('/api/users/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: Number(id) || id }
+    });
+    if (!user) return res.status(404).json({ error: "Utilisateur non trouvé" });
+    res.json({ user });
+  } catch (err) {
+    res.status(400).json({ error: "Erreur lors de la récupération de l'utilisateur" });
+  }
+});
+
 // Forums
 app.get('/forums', async (req, res) => {
   const forums = await prisma.forum.findMany({ include: { owner: true } });
@@ -150,6 +193,22 @@ app.post('/forums/:forumId/topics', async (req, res) => {
     data: { title, forumId, createdById }
   });
   res.json(topic);
+});
+
+app.post('/api/topics', async (req, res) => {
+  const { title, forumId, createdBy } = req.body;
+  try {
+    const topic = await prisma.topic.create({
+      data: {
+        title,
+        forumId: Number(forumId),
+        createdBy: Number(createdBy)
+      }
+    });
+    res.status(201).json(topic);
+  } catch (err) {
+    res.status(500).json({ error: 'Erreur lors de la création du topic', details: err.message });
+  }
 });
 
 // Posts

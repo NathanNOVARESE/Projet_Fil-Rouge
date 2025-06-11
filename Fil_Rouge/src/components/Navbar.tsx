@@ -80,10 +80,19 @@ if (user && user.email !== 'demo@example.com') {
           {/* Menu déroulant profil */}
           <div className="relative">
             <button
-              className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300"
+              className="p-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center"
               onClick={() => setDropdownOpen((open) => !open)}
+              aria-label="Profil"
             >
-              <User size={20} />
+              {user && user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Profil"
+                  className="w-8 h-8 rounded-full object-cover border-2 border-blue-400"
+                />
+              ) : (
+                <User size={20} />
+              )}
             </button>
             {dropdownOpen && (
               <div

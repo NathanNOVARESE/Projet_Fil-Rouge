@@ -43,6 +43,7 @@ const DiscussionsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState('');
+  const [selectedForumId, setSelectedForumId] = useState('1'); // Default to the first forum
 
   // Available tags for selection
   const availableTags: Tag[] = [
@@ -104,11 +105,32 @@ const DiscussionsPage: React.FC = () => {
   const categories = ["Guides", "Discussion", "Question", "Actualités", "Recherche d'équipe"];
 
   // Handle form submission for creating a new discussion
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log({ title, content, selectedGame, selectedCategory, selectedTags });
-    setShowForm(false); // Close the form
-    resetForm(); // Reset the form fields
+
+    const data = {
+      title,
+      forumId: Number(selectedForumId), // récupère l'id du forum sélectionné
+      createdBy: Number(user.id),       // récupère l'id de l'utilisateur connecté
+    };
+
+    try {
+      const response = await fetch('http://localhost:3001/api/topics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setShowForm(false);
+        resetForm();
+        alert('Topic créé avec succès !');
+      } else {
+        alert('Erreur lors de la création du topic.');
+      }
+    } catch (error) {
+      alert('Erreur réseau.');
+    }
   };
 
   // Reset the form fields

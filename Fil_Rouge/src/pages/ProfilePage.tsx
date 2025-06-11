@@ -16,7 +16,7 @@ const EditProfile: React.FC = () => {
 
   // Pré-remplir le formulaire avec les vraies infos du user connecté
   const [formData, setFormData] = useState({
-    name: user?.username || '',
+    username: user?.username || '',
     email: user?.email || '',
     bio: user?.bio || '',
     avatar: user?.avatar || '',
@@ -47,7 +47,7 @@ const EditProfile: React.FC = () => {
   useEffect(() => {
     if (user) {
       setFormData({
-        name: user.username || '',
+        username: user.username || '',
         email: user.email || '',
         bio: user.bio || '',
         avatar: user.avatar || '',
@@ -98,13 +98,38 @@ const EditProfile: React.FC = () => {
   };
 
   // Save password changes
-  const handlePasswordSave = () => {
+  const handlePasswordSave = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       alert("Les mots de passe ne correspondent pas.");
       return;
     }
-    alert("Mot de passe mis à jour avec succès !");
-    setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    if (!passwordData.currentPassword || !passwordData.newPassword) {
+      alert("Veuillez remplir tous les champs.");
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/users/me/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error || "Erreur lors du changement de mot de passe");
+        return;
+      }
+      alert("Mot de passe mis à jour avec succès !");
+      setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err) {
+      alert("Erreur réseau lors du changement de mot de passe");
+    }
   };
 
   // --- GESTION DU CLIC SUR IMAGE ---
@@ -260,8 +285,8 @@ const EditProfile: React.FC = () => {
               {isEditing ? (
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="username"
+                  value={formData.username}
                   onChange={handleInputChange}
                   className="text-2xl font-bold bg-transparent border-b border-blue-500 focus:outline-none"
                 />
@@ -301,42 +326,13 @@ const EditProfile: React.FC = () => {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row md:items-center md:space-x-4">
-                <button 
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700 transition-colors"
-                >
-                  <Edit size={16} className="mr-2" />
-                  Modifier le profil
-                </button>
-                {/* Admin button, visible only for non-admin users */}
-                {!user.isAdmin && (
-                  <button
-                    onClick={async () => {
-                      try {
-                        const token = localStorage.getItem('token');
-                        const res = await fetch(`${BACKEND_URL}/api/users/${user.id}`, {
-                          method: 'PUT',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}`
-                          },
-                          body: JSON.stringify({ isAdmin: true })
-                        });
-                        if (!res.ok) throw new Error('Erreur lors du changement de rôle');
-                        const data = await res.json();
-                        setUser(data.user);
-                        alert('Ce compte est maintenant administrateur.');
-                      } catch (err) {
-                        alert('Erreur lors du changement de rôle');
-                      }
-                    }}
-                    className="px-4 py-2 bg-purple-600 text-white rounded-lg flex items-center hover:bg-purple-700 transition-colors mt-4"
-                  >
-                    Passer ce compte en administrateur
-                  </button>
-                )}
-              </div>
+              <button 
+                onClick={() => setIsEditing(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center hover:bg-blue-700 transition-colors"
+              >
+                <Edit size={16} className="mr-2" />
+                Modifier le profil
+              </button>
             )}
           </div>
         </div>
@@ -373,6 +369,12 @@ const EditProfile: React.FC = () => {
               
               {/* Bio section */}
               <div className="mt-4">
+                {/* Affiche le message si le compte est admin */}
+                {user.isAdmin && (
+                  <div className="mb-2 px-3 py-2 rounded bg-purple-100 text-purple-800 font-semibold w-fit">
+                    Ce compte est administrateur
+                  </div>
+                )}
                 <h3 className="text-lg font-medium mb-2">Bio</h3>
                 {isEditing ? (
                   <textarea
