@@ -6,7 +6,6 @@ import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
 import cors from 'cors';
-import mongoose from 'mongoose';
 
 const app = express();
 const prisma = new PrismaClient();
@@ -14,9 +13,6 @@ const prisma = new PrismaClient();
 app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
-
-// Connexion à MongoDB
-mongoose.connect('mongodb://localhost:27017/filrouge', { useNewUrlParser: true, useUnifiedTopology: true });
 
 // --- ROUTES AUTH ---
 const SECRET = process.env.JWT_SECRET || 'supersecret';
@@ -263,5 +259,25 @@ app.get('/uploads/:filename', (req, res) => {
 const PORT = 3001;
 app.listen(PORT, () => {
   console.log(`Serveur backend lancé sur http://localhost:${PORT}`);
+});
+
+// Supprimer un utilisateur par son id (admin uniquement)
+app.delete('/api/users/:id', async (req, res) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) return res.status(401).json({ error: 'Token manquant' });
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, SECRET);
+    // Optionnel : vérifier si l'utilisateur est admin
+    const adminUser = await prisma.user.findUnique({ where: { id: decoded.userId } });
+    if (!adminUser || !adminUser.isAdmin) {
+      return res.status(403).json({ error: 'Accès refusé' });
+    }
+    const { id } = req.params;
+    await prisma.user.delete({ where: { id: Number(id) || id } });
+    res.json({ message: 'Utilisateur supprimé' });
+  } catch (err) {
+    res.status(400).json({ error: "Impossible de supprimer l'utilisateur" });
+  }
 });
 
