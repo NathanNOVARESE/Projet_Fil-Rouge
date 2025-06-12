@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { Moon, Sun, User, LogOut } from 'lucide-react';
-import { Joystick, Search } from 'lucide-react';
+import { Joystick } from 'lucide-react';
 
 const Navbar: React.FC = () => {
   const { user, setUser, darkMode, toggleDarkMode } = useStore();
@@ -13,7 +13,6 @@ if (user && user.email !== 'demo@example.com') {
   console.log('user in Navbar:', user);
 }
 
-  // Fermer le menu si on clique ailleurs
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -46,19 +45,6 @@ if (user && user.email !== 'demo@example.com') {
         </Link>
 
         <div className="hidden md:flex space-x-4 w-full max-w-md">
-          <div className="relative flex-grow">
-            <input
-              type="text"
-              placeholder="Search..."
-              className="w-full px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
-              aria-label="Search"
-            >
-              <Search size={20} />
-            </button>
-          </div>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -70,17 +56,6 @@ if (user && user.email !== 'demo@example.com') {
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
-          {/* SUPPRIMÉ : bouton notification */}
-          {/* 
-          <button
-            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-            aria-label="Notifications"
-          >
-            <Bell size={20} />
-          </button>
-          */}
-
-          {/* Menu déroulant profil */}
           <div className="relative">
             <button
               className="p-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center"

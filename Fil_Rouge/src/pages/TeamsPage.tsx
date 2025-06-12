@@ -1,275 +1,264 @@
-import React, { useState } from 'react';
-import { useStore } from '../lib/store';
-import { Users, Trophy, Calendar, Search, ChevronDown, ChevronUp, Twitter, Instagram, Globe } from 'lucide-react';
+import React, { useState} from 'react';
+import { useStore, Task } from '../lib/store';
+import TaskCard from '../components/TaskCard';
+import TaskForm from '../components/TaskForm';
+import { Plus, X, Filter, Search, ListTodo } from 'lucide-react';
 
-const TeamsPage: React.FC = () => {
-  const { darkMode } = useStore();
-  const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
+const TasksPage: React.FC = () => {
+  const { tasks, user, darkMode, addTask, updateTask } = useStore();
+  const [showForm, setShowForm] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterGame, setFilterGame] = useState('ALL');
-  const [filterRegion, setFilterRegion] = useState('ALL');
+  const [filterPriority, setFilterPriority] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Mock data for teams
-  const teams = [
-    {
-      media: {
-          coverImage: 'https://img.freepik.com/photos-gratuite/amis-vue-cote-gagnant-jeu-video_23-2149349984.jpg?semt=ais_hybrid&w=740',
-        },
-      id: 1,
-      name: 'Team Vitality',
-      logo: 'https://i.pinimg.com/736x/d3/47/23/d347231141e704770726952940fc17c6.jpg',
-      game: 'Counter-Strike 2',
-      region: 'Europe',
-      established: 2013,
-      players: [        
-        { name: 'apEX',  nationality: 'FR' },
-        { name: 'ZywOo', nationality: 'FR' },
-        { name: 'ropz', nationality: 'ES' },
-        { name: 'mezii',  nationality: 'UK' },
-        { name: 'flameZ', nationality: 'IS' }
-      ],
-      socials: {
-        twitter: 'https://twitter.com/TeamVitality',
-        instagram: 'https://instagram.com/TeamVitality',
-        website: 'https://vitality.gg'
-      },
-      stats: {
-        winRate: '~70%',
-        recentForm: ['L', 'W', 'W', 'W', 'W'],
-        worldRanking: 1
-      }
-    },
-  ];
-
-  const games = ['ALL', 'Counter-Strike 2', 'League of Legends', 'Valorant', 'Fortnite', 'Dota 2'];
-  const regions = ['ALL', 'Europe', 'North America', 'Korea', 'China', 'Brazil', 'Japan'];
-
-  const filteredTeams = teams.filter(team => {
-    return (
-      (searchTerm === '' || team.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (filterGame === 'ALL' || team.game === filterGame) &&
-      (filterRegion === 'ALL' || team.region === filterRegion)
-    );
-  });
-
-  const toggleTeam = (id: number) => {
-    setExpandedTeam(expandedTeam === id ? null : id);
+  const handleCreateTask = (taskData: Omit<Task, 'id'>) => {
+    const newTask = {
+      ...taskData,
+      id: Date.now().toString(),
+    } as Task;
+    addTask(newTask);
+    setShowForm(false);
   };
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setShowForm(true);
+  };
+
+  const handleUpdateTask = (taskData: Omit<Task, 'id'>) => {
+    if (!editingTask) return;
+    const updatedTask = {
+      ...taskData,
+      id: editingTask.id,
+    } as Task;
+    updateTask(updatedTask);
+    setEditingTask(null);
+    setShowForm(false);
+  };
+
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setEditingTask(null);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterPriority('ALL');
+    setFilterStatus('ALL');
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    if (searchTerm && !task.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    if (filterPriority !== 'ALL' && task.priority !== filterPriority) {
+      return false;
+    }
+    if (filterStatus === 'COMPLETED' && !task.completed) {
+      return false;
+    }
+    if (filterStatus === 'ACTIVE' && task.completed) {
+      return false;
+    }
+    return true;
+  });
+
+  if (!user) {
+    return (
+      <div className="text-center py-10">
+        <h1 className="text-2xl font-bold mb-4">Tasks</h1>
+        <p className="mb-6">Please log in to view and manage your tasks.</p>
+        <a 
+          href="/login" 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          Log In
+        </a>
+      </div>
+    );
+  }
+
   return (
-    <div className={`min-h-screen rounded-md ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Coming Soon Banner */}
-      <div className={`relative ${darkMode ? 'bg-yellow-600' : 'bg-yellow-400'} py-4 text-center`}>
-        <h1 className="text-2xl font-bold">COMING SOON!</h1>
-        <p className="text-sm">Cette section sera bientôt disponible. Voici un aperçu...</p>
+    <div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <h1 className="text-2xl font-bold mb-4 md:mb-0">Tasks</h1>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          {showForm ? (
+            <>
+              <X size={16} className="mr-2" />
+              Cancel
+            </>
+          ) : (
+            <>
+              <Plus size={16} className="mr-2" />
+              Add Task
+            </>
+          )}
+        </button>
       </div>
 
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="h-64 w-full bg-gradient-to-r from-purple-600 to-blue-600 relative">
-          <img 
-            src={teams[0]?.media?.coverImage || ''} 
-            alt="Cover Image" 
-            className="w-full h-full object-cover"
+      {showForm && (
+        <div className={`mb-6 p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
+          <h2 className="text-xl font-semibold mb-4">
+            {editingTask ? 'Edit Task' : 'Create New Task'}
+          </h2>
+          <TaskForm
+            task={editingTask || undefined}
+            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+            onCancel={handleCancelForm}
           />
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h1 className="text-4xl font-bold mb-4">Équipes Esport</h1>
-              <p className="text-xl">Découvrez les meilleures équipes professionnelles</p>
-            </div>
-          </div>
         </div>
-      </div>
+      )}
 
-      {/* Preview Content (only show first team) */}
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold">Aperçu de la fonctionnalité à venir</h2>
-          <p className="mt-2">Voici un exemple de ce que vous pourrez voir bientôt</p>
-        </div>
-
-        {/* Show only the first team as preview */}
-        {filteredTeams.slice(0, 1).map(team => (
-          <div 
-            key={team.id}
-            className={`rounded-lg overflow-hidden shadow-lg transition-all duration-200 mx-auto max-w-2xl ${
-              darkMode ? 'bg-gray-800' : 'bg-white'
-            }`}
-          >
-            {/* Team Header */}
-            <div 
-              className="p-6 cursor-pointer"
-              onClick={() => toggleTeam(team.id)}
-            >
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                  <img
-                    src={team.logo}
-                    alt={`${team.name} logo`}
-                    className="w-14 h-14 rounded-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">{team.name}</h2>
-                  <div className="flex flex-wrap items-center gap-2 mt-1">
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}>
-                      {team.game}
-                    </span>
-                    <span className={`px-2 py-1 rounded-full text-xs ${
-                      darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                    }`}>
-                      {team.region}
-                    </span>
-                  </div>
-                </div>
-              </div>
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:items-center mb-4">
+          <div className="relative flex-grow mb-4 md:mb-0 md:mr-4">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={16} className="text-gray-400" />
             </div>
-
-            {/* Team Stats */}
-            <div className="px-6 pb-4">
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div className={`p-2 rounded ${
-                  darkMode ? 'bg-gray-700' : 'bg-gray-100'
-                }`}>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Win Rate</p>
-                  <p className="font-semibold">{team.stats.winRate}</p>
-                </div>
-                <div className={`p-2 rounded ${
-                  darkMode ? 'bg-gray-700' : 'bg-gray-100'
-                }`}>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Forme</p>
-                  <div className="flex justify-center space-x-1">
-                    {team.stats.recentForm.map((result, i) => (
-                      <span 
-                        key={i}
-                        className={`w-5 h-5 flex items-center justify-center rounded text-xs ${
-                          result === 'W' 
-                            ? 'bg-green-500 text-white' 
-                            : 'bg-red-500 text-white'
-                        }`}
-                      >
-                        {result}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className={`p-2 rounded ${
-                  darkMode ? 'bg-gray-700' : 'bg-gray-100'
-                }`}>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Classement</p>
-                  <p className="font-semibold">#{team.stats.worldRanking}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Expandable Content */}
-            {expandedTeam === team.id && (
-              <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-700">
-                {/* Players */}
-                <div className="mt-4">
-                  <h3 className="font-semibold mb-2 flex items-center">
-                    <Users size={18} className="mr-2" />
-                    Joueurs
-                  </h3>
-                  <ul className="space-y-2">
-                    {team.players.slice(0, 5).map((player, i) => (
-                      <li key={i} className="flex justify-between items-center">
-                        <div className="flex items-center">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2 ${
-                            darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                          }`}>
-                            {player.nationality}
-                          </span>
-                          <span>{player.name}</span>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs ${
-                          darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                        }`}>
-                          {player.role}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Socials */}
-                <div className="mt-6 flex space-x-3 justify-center">
-                  <a
-                  href={team.socials.twitter}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`p-2 rounded-full transition-colors ${
-                    darkMode
-                    ? 'bg-gray-700 hover:bg-blue-500'
-                    : 'bg-gray-200 hover:bg-blue-400'
-                  }`}
-                  >
-                  <Twitter size={18} />
-                  </a>
-                  <a
-                  href={team.socials.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`p-2 rounded-full transition-colors ${
-                    darkMode
-                    ? 'bg-gray-700 hover:bg-pink-500'
-                    : 'bg-gray-200 hover:bg-pink-400'
-                  }`}
-                  >
-                  <Instagram size={18} />
-                  </a>
-                  <a
-                  href={team.socials.website}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`p-2 rounded-full transition-colors ${
-                    darkMode
-                    ? 'bg-gray-700 hover:bg-green-500'
-                    : 'bg-gray-200 hover:bg-green-400'
-                  }`}
-                  >
-                  <Globe size={18} />
-                  </a>
-                </div>
-              </div>
-            )}
-
-            {/* Toggle Button */}
-            <div className="px-6 pb-4">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search tasks..."
+              className={`w-full pl-10 pr-3 py-2 rounded-md ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            {searchTerm && (
               <button
-                onClick={() => toggleTeam(team.id)}
-                className={`w-full py-2 rounded-b-lg flex items-center justify-center ${
-                  darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                } transition-colors`}
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                {expandedTeam === team.id ? (
-                  <ChevronUp size={18} className="mr-1" />
-                ) : (
-                  <ChevronDown size={18} className="mr-1" />
-                )}
-                {expandedTeam === team.id ? 'Réduire' : 'Voir plus'}
+                <X size={16} />
               </button>
+            )}
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center px-3 py-2 rounded ${
+              showFilters 
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                : darkMode 
+                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            } transition-colors`}
+          >
+            <Filter size={16} className="mr-2" />
+            Filters
+            {(filterPriority !== 'ALL' || filterStatus !== 'ALL') && (
+              <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full"></span>
+            )}
+          </button>
+        </div>
+
+        {showFilters && (
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} mb-4`}>
+            <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Priority
+                </label>
+                <select
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                  className={`px-3 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="ALL">All Priorities</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Status
+                </label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className={`px-3 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="ALL">All Tasks</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="COMPLETED">Completed</option>
+                </select>
+              </div>
+              <div className="md:self-end">
+                <button
+                  onClick={clearFilters}
+                  className={`px-3 py-2 rounded ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white' 
+                      : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  Clear Filters
+                </button>
+              </div>
             </div>
           </div>
-        ))}
-
-        {/* Coming Soon Message */}
-        <div className={`mt-12 p-8 rounded-lg text-center ${
-          darkMode ? 'bg-gray-800' : 'bg-white'
-        } shadow`}>
-          <h3 className="text-2xl font-bold mb-4">Fonctionnalité en cours de développement</h3>
-          <p className="mb-4">Nous travaillons dur pour vous offrir une expérience complète de suivi des équipes esport.</p>
-          <div className={`inline-block px-6 py-3 rounded-full ${
-            darkMode ? 'bg-yellow-600' : 'bg-yellow-400'
-          } font-semibold`}>
-            Bientôt disponible!
-          </div>
-        </div>
+        )}
       </div>
+
+      {filteredTasks.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTasks.map((task) => (
+            <TaskCard key={task.id} task={task} onEdit={handleEditTask} />
+          ))}
+        </div>
+      ) : (
+        <div className={`text-center py-12 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
+          <div className="text-gray-400 mb-4">
+            {tasks.length > 0 ? (
+              <Filter size={48} className="mx-auto" />
+            ) : (
+              <ListTodo size={48} className="mx-auto" />
+            )}
+          </div>
+          <h3 className="text-xl font-medium mb-2">
+            {tasks.length > 0 ? "No matching tasks found" : "No tasks yet"}
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            {tasks.length > 0 
+              ? "Try changing your search or filters to find what you're looking for."
+              : "Create your first task to get started with managing your work."
+            }
+          </p>
+          {tasks.length > 0 ? (
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Clear Filters
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Create Task
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default TeamsPage;
+export default TasksPage;

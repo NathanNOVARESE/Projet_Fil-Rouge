@@ -47,7 +47,7 @@ model Post {
   createdBy Int
   createdAt DateTime @default(now())
   user      User     @relation("UserPosts", fields: [createdBy], references: [id]) // <--- relation nommée
-  topic     Topic    @relation("TopicPosts", fields: [topicId], references: [id]) // <--- relation nommée
+  topic     Topic    @relation("TopicPosts", fields: [topicId], references: [id], onDelete: Cascade) // <--- relation nommée
 }
 
 model Like {
@@ -55,6 +55,6 @@ model Like {
   userId   Int
   topicId  Int
   user     User   @relation(fields: [userId], references: [id])
-  topic    Topic  @relation(fields: [topicId], references: [id])
+  topic    Topic  @relation(fields: [topicId], references: [id], onDelete: Cascade)
   @@unique([userId, topicId])
 }

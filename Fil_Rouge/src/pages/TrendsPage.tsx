@@ -4,11 +4,9 @@ import { TrendingUp, MessageSquare, ThumbsUp, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const TrendsPage: React.FC = () => {
-  // Access the dark mode state from the store
   const { darkMode } = useStore();
-  const navigate = useNavigate(); // Hook for navigation
+  const navigate = useNavigate();
 
-  // Mock data for trending topics
   const trendingTopics = [
     {
       title: "Nouveau Battle Pass Fortnite",
@@ -44,11 +42,8 @@ const TrendsPage: React.FC = () => {
     }
   ];
 
-  // Mock data for trending categories
-
   return (
     <div className={`p-6 ${darkMode ? 'text-white' : ' text-gray-900'}`}>
-      {/* Header section */}
       <div className={`p-8 mb-8 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
         <h1 className="text-3xl font-bold mb-2 flex items-center">
           <TrendingUp className="mr-2 text-blue-500" />
@@ -58,10 +53,7 @@ const TrendsPage: React.FC = () => {
           Découvrez ce qui fait vibrer la communauté en ce moment
         </p>
       </div>
-
-      {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Trending topics section */}
         <div className="lg:col-span-3">
           <h2 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-4">Sujets populaires</h2>
           <div className="space-y-4">
@@ -69,12 +61,10 @@ const TrendsPage: React.FC = () => {
                 <div 
                 key={index} 
                 onClick={() => navigate('/tchat')}
-
                 className={`${
                   darkMode ? 'bg-gray-800 hover:bg-gray-750' : 'bg-white hover:bg-gray-50'
                 } p-4 rounded-lg shadow transition-all duration-200 cursor-pointer`}
                 >
-                {/* Topic title and category */}
                 <div className="flex justify-between items-start">
                   <div>
                   <h3 className="font-medium text-lg mb-1">{topic.title}</h3>
@@ -86,8 +76,6 @@ const TrendsPage: React.FC = () => {
                   </div>
                   <span className="text-sm text-gray-500 dark:text-gray-400">{topic.timeAgo}</span>
                 </div>
-                
-                {/* Topic statistics */}
                 <div className="flex items-center mt-4 space-x-6 text-gray-600 dark:text-gray-400">
                   <div className="flex items-center">
                   <Eye size={16} className="mr-1" />

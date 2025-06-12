@@ -33,7 +33,7 @@ const TagBadge: React.FC<{ tag: Tag }> = ({ tag }) => {
     <span 
       className="text-xs px-2 py-1 rounded-full flex items-center mr-1 mb-1"
       style={{ 
-        backgroundColor: `${tag.color}20`, // Using hex with alpha
+        backgroundColor: `${tag.color}20`, 
         color: tag.color, 
       }}
     >

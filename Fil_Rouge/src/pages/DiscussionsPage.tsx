@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { MessageSquare, Search, Plus, X, Filter, ThumbsUp, Clock, Tag as TagIcon, Send } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // Hook for navigation
+import { useNavigate } from 'react-router-dom';
 
-// Define interfaces for tags and discussions
 interface Tag {
   id: string;
   name: string;
@@ -34,41 +33,22 @@ const DiscussionsPage: React.FC = () => {
   const [filterGame, setFilterGame] = useState('ALL');
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [showFilters, setShowFilters] = useState(false);
-  const [sortBy, setSortBy] = useState<'date' | 'likes'>('date'); // State pour le tri
+  const [sortBy, setSortBy] = useState<'date' | 'likes'>('date');
   const navigate = useNavigate();
 
-  // Form states for creating a new discussion
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedGame, setSelectedGame] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState('');
-  const [selectedForumId, setSelectedForumId] = useState('1');
-  const [selectedTopicId, setSelectedTopicId] = useState('');
 
-  // Liked discussions state
   const [likedDiscussions, setLikedDiscussions] = useState<number[]>([]);
-
-  // Available tags for selection
-  const availableTags: Tag[] = [
-    { id: '1', name: 'Guide', color: '#3B82F6' },
-    { id: '2', name: 'Débutant', color: '#10B981' },
-    { id: '3', name: 'Avancé', color: '#EF4444' },
-    { id: '4', name: 'Meta', color: '#8B5CF6' },
-    { id: '5', name: 'Stratégie', color: '#F59E0B' },
-    { id: '6', name: 'Classé', color: '#EC4899' },
-    { id: '7', name: 'Casual', color: '#6366F1' }
-  ];
-
-  // Liste des discussions (initialement vide, alimentée par l'API)
   const [discussions, setDiscussions] = useState<Discussion[]>([]);
 
-  // List of games and categories for filtering
   const games = ["Valorant", "League of Legends", "CS2", "Fortnite", "Apex Legends"];
   const categories = ["Guides", "Discussion", "Question", "Actualités", "Recherche d'équipe"];
 
-  // Reset the form fields
   const resetForm = () => {
     setTitle('');
     setContent('');
@@ -78,19 +58,16 @@ const DiscussionsPage: React.FC = () => {
     setNewTagName('');
   };
 
-  // Add a tag to the selected tags
   const addTag = (tag: Tag) => {
     if (!selectedTags.some(t => t.id === tag.id)) {
       setSelectedTags([...selectedTags, tag]);
     }
   };
 
-  // Remove a tag from the selected tags
   const removeTag = (tagId: string) => {
     setSelectedTags(selectedTags.filter(tag => tag.id !== tagId));
   };
 
-  // Add a new custom tag
   const addNewTag = () => {
     if (!newTagName.trim()) return;
     const newTag: Tag = {
@@ -102,7 +79,6 @@ const DiscussionsPage: React.FC = () => {
     setNewTagName('');
   };
 
-  // Filter discussions based on search term, game, and category
   const filteredDiscussions = discussions
     .filter(discussion => {
       const search = searchTerm.trim().toLowerCase();
@@ -124,7 +100,6 @@ const DiscussionsPage: React.FC = () => {
       }
     });
 
-  // If the user is not logged in, show a message
   if (!user) {
     return (
       <div className="text-center py-10">
@@ -140,12 +115,11 @@ const DiscussionsPage: React.FC = () => {
     );
   }
 
-  // Handle discussion creation
   const handleCreateDiscussion = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!selectedForumId || !user?.id) {
-      alert("Forum ou utilisateur non défini !");
+    if (!user?.id) {
+      alert("Utilisateur non défini !");
       return;
     }
 
@@ -156,7 +130,6 @@ const DiscussionsPage: React.FC = () => {
       category: selectedCategory,
       tags: selectedTags.map(tag => tag.name),
       createdAt: new Date().toISOString(),
-      forumId: Number(selectedForumId),
       createdBy: Number(user?.id),
     };
 
@@ -190,7 +163,6 @@ const DiscussionsPage: React.FC = () => {
     }
   };
 
-  // Fetch discussions from the server
   useEffect(() => {
     fetch('/api/discussions')
       .then(res => res.json())
@@ -213,13 +185,12 @@ const DiscussionsPage: React.FC = () => {
               : [],
           views: d.views || 0,
           likes: d.likes || 0,
-          replies: d._count?.posts ?? 0, // <-- Utilise le vrai nombre de messages
+          replies: d._count?.posts ?? 0,
         }));
         setDiscussions(mapped);
       });
   }, []);
 
-  // Format the date to YYYY-MM-DD
   const formatDate = (dateString: string) => {
     const d = new Date(dateString);
     const year = d.getFullYear();
@@ -228,10 +199,9 @@ const DiscussionsPage: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // Handle like action
   const handleLike = async (discussionId: number) => {
     if (likedDiscussions.includes(discussionId)) return;
-    const res = await fetch(`/api/discussions/${discussionId}/like`, {
+    const res = await fetch(`/api/topics/${discussionId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: user.id })
@@ -239,7 +209,7 @@ const DiscussionsPage: React.FC = () => {
     if (res.ok) {
       setDiscussions(discussions =>
         discussions.map(d =>
-          d.id === discussionId
+          Number(d.id) === discussionId
             ? { ...d, likes: d.likes + 1 }
             : d
         )
@@ -250,7 +220,6 @@ const DiscussionsPage: React.FC = () => {
 
   return (
     <div className={`p-4 md:p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-      {/* Header section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0 inline-block border-b-4 border-gray-300 pb-2">
           Discussions
@@ -272,13 +241,10 @@ const DiscussionsPage: React.FC = () => {
           )}
         </button>
       </div>
-
-      {/* Form for creating a new discussion */}
       {showForm && (
         <div className={`mb-6 p-4 md:p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
           <h2 className="text-lg md:text-xl font-semibold mb-4">Créer une nouvelle discussion</h2>
           <form onSubmit={handleCreateDiscussion} className="space-y-4">
-            {/* Title input */}
             <div>
               <label className="block text-sm font-medium mb-1">Titre</label>
               <input
@@ -293,8 +259,6 @@ const DiscussionsPage: React.FC = () => {
                 required
               />
             </div>
-
-            {/* Content input */}
             <div>
               <label className="block text-sm font-medium mb-1">Contenu</label>
               <textarea
@@ -309,8 +273,6 @@ const DiscussionsPage: React.FC = () => {
                 required
               />
             </div>
-
-            {/* Game and category selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Jeu</label>
@@ -332,7 +294,6 @@ const DiscussionsPage: React.FC = () => {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">Catégorie</label>
                 <select
@@ -354,8 +315,6 @@ const DiscussionsPage: React.FC = () => {
                 </select>
               </div>
             </div>
-
-            {/* Tags selection */}
             <div>
               <label className="block text-sm font-medium mb-1">Tags</label>
               <div className="flex flex-wrap gap-2 mb-2">
@@ -402,8 +361,6 @@ const DiscussionsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Form buttons */}
             <div className="flex flex-col md:flex-row justify-end space-y-2 md:space-y-0 md:space-x-2">
               <button
                 type="button"
@@ -427,8 +384,6 @@ const DiscussionsPage: React.FC = () => {
           </form>
         </div>
       )}
-
-      {/* Search and filters */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center mb-4">
           <div className="relative flex-grow mb-4 md:mb-0 md:mr-4">
@@ -459,8 +414,6 @@ const DiscussionsPage: React.FC = () => {
             Filtres
           </button>
         </div>
-
-        {/* Filters section */}
         {showFilters && (
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} mb-4`}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -517,16 +470,19 @@ const DiscussionsPage: React.FC = () => {
           </div>
         )}
       </div>
-
-      {/* List of discussions */}
       <div className="space-y-4">
         {filteredDiscussions.map((discussion) => (
-          <button
+          <div
             key={discussion.id}
-            onClick={() => navigate(`/tchat/${discussion.id}`)} // Redirect to the chat page
+            onClick={() => navigate(`/tchat/${discussion.id}`)}
+            role="button"
+            tabIndex={0}
             className={`w-full text-left ${
               darkMode ? 'bg-gray-800' : 'bg-white'
-            } rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg`}
+            } rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg cursor-pointer`}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') navigate(`/tchat/${discussion.id}`);
+            }}
           >
             <div className="flex items-start space-x-4">
               <img
@@ -555,9 +511,7 @@ const DiscussionsPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
                 <p className="text-gray-600 dark:text-gray-300 mb-4">{discussion.content}</p>
-
                 <div className="flex flex-wrap gap-2 mb-4">
                   {discussion.tags.map((tag, idx) => (
                     <span
@@ -573,7 +527,6 @@ const DiscussionsPage: React.FC = () => {
                     </span>
                   ))}
                 </div>
-
                 <div className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center">
                     <button
@@ -609,7 +562,7 @@ const DiscussionsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
     </div>

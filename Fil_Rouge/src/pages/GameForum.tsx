@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { useNavigate } from 'react-router-dom';
-import { UserRound, UserRoundPlus, MessageCircle, Trophy } from 'lucide-react';
 
 const GameForum: React.FC = () => {
   const navigate = useNavigate();
@@ -16,7 +15,6 @@ const GameForum: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  // Fetch recent topics when user is logged in
   useEffect(() => {
     if (user) {
       fetch('/api/topics?limit=6&sort=desc')
@@ -66,33 +64,14 @@ const GameForum: React.FC = () => {
     'Apex Legends'
   ];
 
-  const onlinePlayers = 1243;
-  const activeMembers = 8765;
-  const discussionCount = 4321;
-  const tournamentsOrganized = 56;
-
-  const recentActivities = [
-    'Nouveau sujet dans Valorant',
-    'Guide complet pour League of Legends',
-    'Nouveau sujet dans Counter-Strike',
-    'Guide complet pour Fortnite',
-    'Nouveau sujet dans Apex Legends',
-    'Guide complet pour Overwatch 2'
-  ];
-
   return (
     <div className={`p-6 ${darkMode ? 'text-white' : ' text-gray-900'}`}>
-      {/* Welcome section */}
       <div className={`p-4 sm:p-8 mb-8 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} border ${darkMode ? 'border-gray-700' : 'border-gray-200'} shadow`} style={{ height: 'auto' }}>
         <h1 className="text-2xl sm:text-4xl font-bold mb-4 text-blue-500">Bienvenue sur GameForum</h1>
         <p className="text-lg sm:text-2xl font-bold">Rejoignez la plus grande communauté de gamers francophones. Discutez, partagez et restez informé des dernières actualités gaming.</p>
       </div>
-      
-      {/* Community section */}
       <section className="mb-12">
         <h2 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-4">Rejoindre la communauté</h2>
-        
-        {/* Featured games section */}
         <section className="mb-12">
           <h3 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-2">Jeux en vedette</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 ">
@@ -106,7 +85,6 @@ const GameForum: React.FC = () => {
                 'Overwatch 2': 'https://i.pinimg.com/736x/6a/a2/4c/6aa24c0ce2d5823abd694787b125449c.jpg'
               };
 
-              // Définir la route selon le jeu
               let route = `/presgame?game=${encodeURIComponent(game)}`;
               if (game === 'Valorant') route = '/gamepresval';
               if (game === 'League of Legends') route = '/gamepreslol';
@@ -139,8 +117,6 @@ const GameForum: React.FC = () => {
           </div>
         </section>
       </section>
-      
-      {/* Recent activity section */}
       <section>
         <h2 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-2">Activité récente</h2>
         <div>

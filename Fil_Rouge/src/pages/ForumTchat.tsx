@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '../lib/store';
-import { Send, ArrowLeft, MoreVertical, Smile, Image as ImageIcon, File, Heart, MessageSquare } from 'lucide-react';
+import { Send, ArrowLeft, MoreVertical } from 'lucide-react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 const ForumChat: React.FC = () => {
@@ -10,20 +10,15 @@ const ForumChat: React.FC = () => {
   const location = useLocation();
 
   const [messages, setMessages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [topic, setTopic] = useState<any>(null);
-  const [creator, setCreator] = useState<any>(null); // Ajoute un state pour le créateur
 
-  // Menu déroulant
   const [menuOpen, setMenuOpen] = useState(false);
-  // Modal d'édition
   const [editOpen, setEditOpen] = useState(false);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editTags, setEditTags] = useState("");
 
-  // Référence pour le scroll du tchat
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -32,18 +27,13 @@ const ForumChat: React.FC = () => {
 
   useEffect(() => {
     if (!topicId) return;
-    setLoading(true);
-
     const fetchMessages = () => {
       fetch(`/api/topics/${topicId}/messages`)
         .then(res => res.json())
-        .then(data => setMessages(data))
-        .finally(() => setLoading(false));
+        .then(data => setMessages(data));
     };
-
     fetchMessages();
     const interval = setInterval(fetchMessages, 2000);
-
     return () => clearInterval(interval);
   }, [topicId]);
 
@@ -52,35 +42,24 @@ const ForumChat: React.FC = () => {
     fetch(`/api/topics/${topicId}`)
       .then(res => res.json())
       .then(data => {
-        console.log('topic:', data); // Ajoute ceci
         setTopic(data);
         setEditTitle(data.title);
         setEditContent(data.content || "");
-        setEditTags(Array.isArray(data.tags) ? data.tags.map(t => t.name).join(", ") : "");
+        setEditTags(Array.isArray(data.tags) ? data.tags.map((t: any) => t.name).join(", ") : "");
       });
   }, [topicId]);
 
-  useEffect(() => {
-    if (!topic?.createdBy) return;
-    fetch(`/api/users/${topic.createdBy}`)
-      .then(res => res.json())
-      .then(data => setCreator(data));
-  }, [topic?.createdBy]);
-
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !user) return;
-
     const msgToSend = {
       content: newMessage,
       createdBy: user.id
     };
-
     const res = await fetch(`/api/topics/${topicId}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(msgToSend)
     });
-
     if (res.ok) {
       const saved = await res.json();
       setMessages([...messages, { ...saved, user }]);
@@ -102,11 +81,11 @@ const ForumChat: React.FC = () => {
       body: JSON.stringify({
         title: editTitle,
         content: editContent,
-        tags: editTags.split(",").map(t => t.trim()).filter(Boolean),
+        tags: editTags.split(",").map((t: string) => t.trim()).filter(Boolean),
         userId: user.id
       })
     });
-    setTopic({ ...topic, title: editTitle, content: editContent, tags: editTags.split(",").map(t => t.trim()).filter(Boolean) });
+    setTopic({ ...topic, title: editTitle, content: editContent, tags: editTags.split(",").map((t: string) => t.trim()).filter(Boolean) });
     setEditOpen(false);
   };
 
@@ -124,7 +103,6 @@ const ForumChat: React.FC = () => {
     }
   };
 
-  // Scroll en bas du tchat quand messages change
   useEffect(() => {
     if (messagesEndRef.current && messagesContainerRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -134,7 +112,6 @@ const ForumChat: React.FC = () => {
   useEffect(() => {
     if (location.state && location.state.openEdit) {
       setEditOpen(true);
-      // Optionnel : nettoie l'état pour éviter la réouverture si on revient en arrière
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -142,25 +119,20 @@ const ForumChat: React.FC = () => {
   return (
     <div
       className={`flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}
-      style={{ height: '87vh', maxHeight: '1000px', minHeight: '600px' }} // Ajuste la hauteur ici si besoin
+      style={{ height: '87vh', maxHeight: '1000px', minHeight: '600px' }}
     >
-      {/* Header section */}
       <div className={`p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
         <div className="flex items-center justify-between">
-          {/* Back button */}
           <button onClick={() => navigate(-1)} className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
             <ArrowLeft size={20} />
           </button>
-          {/* Topic title centré */}
           <div className="flex-1 flex justify-center">
             <div className="flex items-center space-x-3">
-              {/* SUPPRIMÉ : cercle/avatar créateur */}
               <h2 className="font-semibold text-lg">
                 {topic ? topic.title : "Chargement..."}
               </h2>
             </div>
           </div>
-          {/* Options button */}
           {user?.id === topic?.createdBy && (
             <div className="relative">
               <button
@@ -188,7 +160,6 @@ const ForumChat: React.FC = () => {
             </div>
           )}
         </div>
-        {/* Modal d'édition */}
         {editOpen && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
             <form
@@ -238,7 +209,6 @@ const ForumChat: React.FC = () => {
         )}
       </div>
 
-      {/* Messages section */}
       <div
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4"
@@ -249,7 +219,6 @@ const ForumChat: React.FC = () => {
             className={`flex ${message.createdBy === user?.id ? 'justify-end' : 'justify-start'}`}
           >
             <div className={`flex max-w-xs md:max-w-md lg:max-w-lg ${message.createdBy === user?.id ? 'flex-row-reverse' : ''}`}>
-              {/* Avatar for other users */}
               {message.createdBy !== user?.id && (
                 <div className="flex-shrink-0 mr-3">
                   <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
@@ -262,7 +231,6 @@ const ForumChat: React.FC = () => {
                 </div>
               )}
               <div>
-                {/* Message metadata */}
                 {!message.isCurrentUser && (
                   <div className="flex items-center mb-1 space-x-2">
                     <span className="font-semibold text-sm">{message.user.name}</span>
@@ -272,7 +240,6 @@ const ForumChat: React.FC = () => {
                     <span className="text-xs text-gray-500 dark:text-gray-400">{message.timestamp}</span>
                   </div>
                 )}
-                {/* Message content */}
                 <div
                   className={`p-3 rounded-lg break-words max-w-xs md:max-w-md lg:max-w-lg ${
                     message.isCurrentUser
@@ -294,10 +261,8 @@ const ForumChat: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input section */}
       <div className={`p-3 border-t ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
         <div className="flex items-center space-x-2">
-          {/* Message input */}
           <input
             type="text"
             value={newMessage}
@@ -306,7 +271,6 @@ const ForumChat: React.FC = () => {
             placeholder="Write a message..."
             className={`flex-1 py-2 px-4 rounded-full ${darkMode ? 'bg-gray-700 focus:bg-gray-600' : 'bg-gray-100 focus:bg-white'} focus:outline-none focus:ring-2 focus:ring-blue-500`}
           />
-          {/* Send button */}
           <button 
             onClick={handleSendMessage}
             disabled={!newMessage.trim()}
@@ -320,7 +284,6 @@ const ForumChat: React.FC = () => {
         </div>
       </div>
 
-      {/* Edit mode section */}
       {isEditMode ? (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
           <form
@@ -368,12 +331,7 @@ const ForumChat: React.FC = () => {
           </form>
         </div>
       ) : (
-        <div className="p-4">
-          {/* Affiche le topic normalement */}
-          <div>
-            {/* ...affichage classique du topic... */}
-          </div>
-        </div>
+        <div className="p-4"></div>
       )}
     </div>
   );

@@ -4,13 +4,12 @@ import { Star, Users, MessageSquare, Calendar, Download, Gamepad2, ChevronDown, 
 import { useNavigate } from 'react-router-dom';
 
 const GamePres: React.FC = () => {
-  // Access user and dark mode state from the store
-  const { user, darkMode } = useStore();
-  const [showFullDescription, setShowFullDescription] = useState(false); // State to toggle full description
-  const navigate = useNavigate(); // React Router hook for navigation
-  const [activeTab, setActiveTab] = useState('overview'); // State to manage active tab
 
-  // Game data mock
+  const { user, darkMode } = useStore();
+  const [showFullDescription, setShowFullDescription] = useState(false); 
+  const navigate = useNavigate(); 
+  const [activeTab, setActiveTab] = useState('overview'); 
+
   const game = {
       id: 'fortnite',
     title: 'Fortnite',
@@ -73,14 +72,12 @@ const GamePres: React.FC = () => {
 
   };
 
-  // Toggle description visibility
   const toggleDescription = () => {
     setShowFullDescription(!showFullDescription);
   };
 
   return (
     <div className={`min-h-screen rounded-md ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Hero Section */}
       <div className="relative">
         <div className="h-96 w-full overflow-hidden">
           <img 
@@ -133,10 +130,8 @@ const GamePres: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
 
-        {/* Back Button Section */}
         <div className="container mx-auto pb-4">
           <button
             onClick={() => navigate(-1)}
@@ -147,7 +142,6 @@ const GamePres: React.FC = () => {
           </button>
         </div>
 
-        {/* Tabs Navigation */}
         <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} mb-8`}>
           <div className="flex space-x-8">
             {['overview', 'media'].map((tab) => (
@@ -170,9 +164,8 @@ const GamePres: React.FC = () => {
           </div>
         </div>
 
-        {/* Tab Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content Column */}
+  
           <div className="lg:col-span-2">
             {activeTab === 'overview' && (
               <>
@@ -272,7 +265,6 @@ const GamePres: React.FC = () => {
             )}
           </div>
           
-          {/* Sidebar Column */}
           <div className="space-y-6">
             <div className={`rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 shadow`}>
               <h2 className="text-xl font-semibold mb-4">Statistiques</h2>

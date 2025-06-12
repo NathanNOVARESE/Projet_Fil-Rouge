@@ -1,5 +1,4 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import AdminDashboard from './pages/AdminDashboard';
 import GameForum from './pages/GameForum';
@@ -25,7 +24,6 @@ import { useStore } from './lib/store';
 
 function App() {
   const { darkMode } = useStore();
-  const navigate = useNavigate();
 
   return (
     <div className={darkMode ? 'dark' : ''}>

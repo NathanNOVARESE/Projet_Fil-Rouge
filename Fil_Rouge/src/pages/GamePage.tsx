@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { useStore } from '../lib/store';
-import { Gamepad2, Search, Users, Star, Trophy } from 'lucide-react'; // Ajoute Trophy à l'import
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
+import { Gamepad2, Search, Star, Trophy } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const GamesPage: React.FC = () => {
-  const { darkMode } = useStore(); // Access the global dark mode state
-  const [searchTerm, setSearchTerm] = useState(''); // State to manage the search input
-  const navigate = useNavigate(); // Initialize useNavigate for page navigation
+  const { darkMode } = useStore();
+  const [searchTerm, setSearchTerm] = useState('');
+  const navigate = useNavigate();
 
-  // Mock data for games
   const games = [
     {
       title: "Valorant",
@@ -47,7 +46,7 @@ const GamesPage: React.FC = () => {
       players: 18765,
       rating: 6.6,
       image: "https://i.pinimg.com/736x/bc/93/1b/bc931b47a7edf6322785f1a6427a3653.jpg",
-      route: "/gamepresal" // Route par défaut ou spécifique
+      route: "/gamepresal"
     },
     {
       title: "Overwatch 2",
@@ -55,11 +54,10 @@ const GamesPage: React.FC = () => {
       players: 15678,
       rating: 1.8,
       image: "https://i.pinimg.com/736x/6a/a2/4c/6aa24c0ce2d5823abd694787b125449c.jpg",
-      route: "/gamepresow2" // Route par défaut ou spécifique
+      route: "/gamepresow2"
     }
   ];
 
-  // Filter games based on the search term
   const filteredGames = games.filter(game =>
     game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     game.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -67,7 +65,6 @@ const GamesPage: React.FC = () => {
 
   return (
     <div className={`p-6 ${darkMode ? 'text-white' : ' text-gray-900'}`}>
-      {/* Header section */}
       <div className={`p-8 mb-8 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
         <h1 className="text-3xl font-bold mb-2 flex items-center">
           <Gamepad2 className="mr-2 text-blue-500" />
@@ -77,8 +74,6 @@ const GamesPage: React.FC = () => {
           Explorez notre sélection de jeux et rejoignez les communautés
         </p>
       </div>
-
-      {/* Search bar */}
       <div className="mb-8">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -86,7 +81,7 @@ const GamesPage: React.FC = () => {
             type="text"
             placeholder="Rechercher un jeu..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)} // Update the search term on input change
+            onChange={(e) => setSearchTerm(e.target.value)}
             className={`w-full pl-10 pr-4 py-3 rounded-lg ${
               darkMode 
                 ? 'bg-gray-800 text-white' 
@@ -95,40 +90,31 @@ const GamesPage: React.FC = () => {
           />
         </div>
       </div>
-
-      {/* Games grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredGames.map((game, index) => (
           <div 
             key={index}
-            onClick={() => navigate(game.route)} // Utilise la route spécifique du jeu
+            onClick={() => navigate(game.route)}
             className={`${
               darkMode ? 'bg-gray-800' : 'bg-white'
             } rounded-lg shadow overflow-hidden transition-transform duration-200 hover:transform hover:scale-105 cursor-pointer`}
           >
-            {/* Game image */}
             <div 
               className="h-[450px] bg-cover bg-center"
               style={{ backgroundImage: `url(${game.image})` }}
             />
             <div className="p-4">
-              {/* Game title */}
               <h3 className="text-xl font-semibold mb-2">{game.title}</h3>
-              {/* Game category */}
               <span className={`inline-block px-2 py-1 rounded-full text-sm ${
                 darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-100 text-blue-800'
               } mb-3`}>
                 {game.category}
               </span>
-              
-              {/* Game stats */}
               <div className="grid grid-cols-2 gap-2 mt-4">
-                {/* Rating */}
                 <div className="flex flex-col justify-center items-center h-full p-2 bg-gray-100 dark:bg-gray-700 rounded">
                   <Star size={28} className="mb-2 text-yellow-400" />
                   <span className="text-lg font-semibold text-black dark:text-white">{game.rating}</span>
                 </div>
-                {/* Tournaments */}
                 <div className="flex flex-col items-center p-2 bg-gray-100 dark:bg-gray-700 rounded">
                   <Trophy size={24} className="mb-1 text-yellow-500" />
                   <span className="text-lg font-semibold text-black dark:text-white">Tournois</span>

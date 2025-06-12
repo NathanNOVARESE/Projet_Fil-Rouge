@@ -29,7 +29,6 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
     return <div>Please log in to create tasks</div>;
   }
 
-  // Mock tags for demo
   const availableTags = [
     { id: '1', name: 'Work', color: '#3B82F6' },
     { id: '2', name: 'Personal', color: '#10B981' },
@@ -49,7 +48,7 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
       dueDate: dueDate ? new Date(dueDate) : undefined,
       completed: task?.completed || false,
       tags: selectedTags,
-      userId: user.id,
+      userId: String(user.id),
     });
   };
 
@@ -66,11 +65,10 @@ const TaskForm: React.FC<TaskFormProps> = ({ task, onSubmit, onCancel }) => {
   const addNewTag = () => {
     if (!newTagName.trim()) return;
     
-    // In a real app, you would save this to the database
     const newTag: Tag = {
       id: `new-${Date.now()}`,
       name: newTagName,
-      color: '#' + Math.floor(Math.random() * 16777215).toString(16), // Random color
+      color: '#' + Math.floor(Math.random() * 16777215).toString(16),
     };
     
     addTag(newTag);

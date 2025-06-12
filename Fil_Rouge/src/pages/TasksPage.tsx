@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState} from 'react';
 import { useStore, Task } from '../lib/store';
 import TaskCard from '../components/TaskCard';
 import TaskForm from '../components/TaskForm';
@@ -12,53 +12,12 @@ const TasksPage: React.FC = () => {
   const [filterPriority, setFilterPriority] = useState('ALL');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [showFilters, setShowFilters] = useState(false);
-  
-  // Generate some mock tasks for demo when there are no tasks
-  useEffect(() => {
-    if (tasks.length === 0 && user) {
-      const mockTasks = [
-        {
-          id: '1',
-          title: 'Complete project proposal',
-          description: 'Finalize the project proposal for the client meeting',
-          completed: false,
-          priority: 'HIGH',
-          dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
-          tags: [{ id: '1', name: 'Work', color: '#3B82F6' }, { id: '3', name: 'Urgent', color: '#EF4444' }],
-          userId: user.id,
-        },
-        {
-          id: '2',
-          title: 'Buy groceries',
-          description: 'Milk, eggs, bread, and vegetables',
-          completed: true,
-          priority: 'MEDIUM',
-          dueDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-          tags: [{ id: '2', name: 'Personal', color: '#10B981' }],
-          userId: user.id,
-        },
-        {
-          id: '3',
-          title: 'Learn React Hooks',
-          description: 'Go through the documentation and practice examples',
-          completed: false,
-          priority: 'LOW',
-          dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
-          tags: [{ id: '5', name: 'Learning', color: '#F59E0B' }],
-          userId: user.id,
-        },
-      ] as Task[];
-      
-      mockTasks.forEach(task => addTask(task));
-    }
-  }, [user, tasks, addTask]);
 
   const handleCreateTask = (taskData: Omit<Task, 'id'>) => {
     const newTask = {
       ...taskData,
-      id: Date.now().toString(), // In a real app, this would be handled by the backend
+      id: Date.now().toString(),
     } as Task;
-    
     addTask(newTask);
     setShowForm(false);
   };
@@ -70,12 +29,10 @@ const TasksPage: React.FC = () => {
 
   const handleUpdateTask = (taskData: Omit<Task, 'id'>) => {
     if (!editingTask) return;
-    
     const updatedTask = {
       ...taskData,
       id: editingTask.id,
     } as Task;
-    
     updateTask(updatedTask);
     setEditingTask(null);
     setShowForm(false);
@@ -92,26 +49,19 @@ const TasksPage: React.FC = () => {
     setFilterStatus('ALL');
   };
 
-  // Apply filters and search
   const filteredTasks = tasks.filter(task => {
-    // Search term filter
     if (searchTerm && !task.title.toLowerCase().includes(searchTerm.toLowerCase())) {
       return false;
     }
-    
-    // Priority filter
     if (filterPriority !== 'ALL' && task.priority !== filterPriority) {
       return false;
     }
-    
-    // Status filter
     if (filterStatus === 'COMPLETED' && !task.completed) {
       return false;
     }
     if (filterStatus === 'ACTIVE' && task.completed) {
       return false;
     }
-    
     return true;
   });
 

@@ -1,7 +1,6 @@
-// Import necessary libraries and components
 import React, { useRef, useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
-import { Mail, Calendar, Trophy, TowerControl as GameController, MessageSquare, Star, Edit, Save, X } from 'lucide-react';
+import { Mail, Calendar, Edit, Save, X } from 'lucide-react';
 import type { User } from '../types/User';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,14 +8,11 @@ const MAX_SIZE_MB = 5;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const BACKEND_URL = "http://localhost:3001";
 
-// Component for editing the profile
 const EditProfile: React.FC = () => {
-  // Typage explicite du user
   const { user, darkMode, setUser } = useStore() as { user: User | null; darkMode: boolean; setUser: (u: User) => void };
   const [isEditing, setIsEditing] = useState(false);
   const navigate = useNavigate();
 
-  // Pré-remplir le formulaire avec les vraies infos du user connecté
   const [formData, setFormData] = useState({
     username: user?.username || '',
     email: user?.email || '',
@@ -25,7 +21,6 @@ const EditProfile: React.FC = () => {
     banner: user?.banner || ''
   });
 
-  // Add state for password change and email validation
   const [passwordData, setPasswordData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -33,19 +28,15 @@ const EditProfile: React.FC = () => {
   });
   const [emailError, setEmailError] = useState('');
 
-  // Aperçu local
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
 
-  // Fichiers sélectionnés
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
 
-  // Réfs pour inputs cachés
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
-  // Synchronise le formulaire si le user change (ex: après login)
   useEffect(() => {
     if (user) {
       setFormData({
@@ -62,44 +53,33 @@ const EditProfile: React.FC = () => {
     }
   }, [user]);
 
-  // Statistiques dynamiques (exemple, adapte selon ton modèle)
   const profileStats = {
-    memberSince: user ? new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : '',
-    gamesPlayed: user?.gamesPlayed ?? 0,
-    tournamentsWon: user?.tournamentsWon ?? 0,
-    discussionsStarted: user?.discussionsStarted ?? 0,
-    reputation: user?.reputation ?? 0
+    memberSince: user ? new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) : ''
   };
 
-  // Activité récente (adapte selon ton backend)
-  const [recentActivities, setRecentActivities] = useState<{ id: number; content: string; date: string }[]>([]);
+  const [recentActivities, setRecentActivities] = useState<{ id: number; title: string; content: string; date: string }[]>([]);
 
-  // Function to validate email format
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  // Handle input changes for form fields
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Handle email validation on change
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
     setFormData(prev => ({ ...prev, email: value }));
     setEmailError(validateEmail(value) ? '' : 'Adresse email invalide.');
   };
 
-  // Handle password input changes
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setPasswordData(prev => ({ ...prev, [name]: value }));
   };
 
-  // Save password changes
   const handlePasswordSave = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       alert("Les mots de passe ne correspondent pas.");
@@ -134,7 +114,6 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  // --- GESTION DU CLIC SUR IMAGE ---
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -156,7 +135,6 @@ const EditProfile: React.FC = () => {
     }
   };
 
-  // --- UPLOAD VERS BACKEND ---
   const uploadToBackend = async (file: File, type: 'avatar' | 'banner'): Promise<string> => {
     const form = new FormData();
     form.append('file', file);
@@ -167,11 +145,9 @@ const EditProfile: React.FC = () => {
     });
     if (!res.ok) throw new Error('Erreur upload');
     const data = await res.json();
-    // Retourne l’URL complète
     return `${BACKEND_URL}${data.url}`;
   };
 
-  // --- SAUVEGARDE DU PROFIL ---
   const handleSave = async () => {
     try {
       let avatarUrl = formData.avatar;
@@ -212,7 +188,6 @@ const EditProfile: React.FC = () => {
     return url;
   };
 
-  // Récupère les topics du user pour l'activité récente
   useEffect(() => {
     const fetchUserTopics = async () => {
       if (!user) return;
@@ -220,11 +195,12 @@ const EditProfile: React.FC = () => {
         const res = await fetch(`/api/users/${user.id}/topics`);
         if (!res.ok) return;
         const topics = await res.json();
-        // On formate pour l'affichage dans l'activité récente
+        const userTopics = topics.filter((topic: any) => topic.authorId === user.id);
         setRecentActivities(
-          topics.map((topic: any) => ({
-            id: topic.id, // <-- ajoute l'id
-            content: `Nouveau topic : ${topic.title}`,
+          userTopics.map((topic: any) => ({
+            id: topic.id,
+            title: topic.title,
+            content: topic.content ? topic.content.slice(0, 80) + (topic.content.length > 80 ? "..." : "") : "",
             date: new Date(topic.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
           }))
         );
@@ -233,12 +209,6 @@ const EditProfile: React.FC = () => {
     fetchUserTopics();
   }, [user]);
   
-  // Handle topic editing
-  const handleEditTopic = (topicId: number) => {
-    navigate(`/tchat/${topicId}?edit=1`);
-  };
-
-  // Handle topic deletion
   const handleDeleteTopic = async (topicId: number) => {
     if (!window.confirm("Supprimer ce topic ? Cette action est irréversible.")) return;
     try {
@@ -271,11 +241,9 @@ const EditProfile: React.FC = () => {
     );
   }
 
-  // Main profile page layout
   return (
     <div className={`p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
       <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg overflow-hidden`}>
-        {/* Bannière */}
         <div
           className="h-48 bg-cover bg-center relative group cursor-pointer"
           style={{
@@ -296,11 +264,15 @@ const EditProfile: React.FC = () => {
               onChange={e => handleFileChange(e, 'banner')}
             />
           )}
+          {isEditing && (
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer">
+              <Edit size={32} className="text-white" />
+            </div>
+          )}
           <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/50 to-transparent"></div>
         </div>
 
         <div className="relative px-6 pb-6">
-          {/* Profile picture and name */}
           <div className="flex items-center -mt-12">
             <div className="relative group">
               <div
@@ -316,6 +288,11 @@ const EditProfile: React.FC = () => {
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
+                {isEditing && (
+                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer">
+                    <Edit size={28} className="text-white" />
+                  </div>
+                )}
               </div>
               {isEditing && (
                 <input
@@ -339,12 +316,10 @@ const EditProfile: React.FC = () => {
               ) : (
                 <h1 className="text-2xl font-bold">{user.username}</h1>
               )}
-              <p className="text-gray-600 dark:text-gray-400 flex items-center">
-              </p>
+              <p className="text-gray-600 dark:text-gray-400 flex items-center"></p>
             </div>
           </div>
           
-          {/* Edit and save buttons */}
           <div className="pt-6">
             {isEditing ? (
               <div className="flex space-x-2">
@@ -381,10 +356,8 @@ const EditProfile: React.FC = () => {
           </div>
         </div>
 
-        {/* Profile details and statistics */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 ml-6 mr-6 mb-6 ">
           <div className="md:col-span-2 space-y-6">
-            {/* Information section */}
             <div className="space-y-4">
               <h2 className="text-xl font-semibold mb-4">Informations</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -411,9 +384,7 @@ const EditProfile: React.FC = () => {
                 </div>
               </div>
               
-              {/* Bio section */}
               <div className="mt-4">
-                {/* Affiche le message si le compte est admin */}
                 {user.isAdmin && (
                   <div className="mb-2 px-3 py-2 rounded bg-purple-100 text-purple-800 font-semibold w-fit">
                     Ce compte est administrateur
@@ -436,7 +407,6 @@ const EditProfile: React.FC = () => {
               </div>
             </div>
 
-            {/* Add password change section, visible only in edit mode */}
             {isEditing && (
               <div className="mt-8">
                 <h2 className="text-xl font-semibold mb-4">Modifier le mot de passe</h2>
@@ -481,16 +451,15 @@ const EditProfile: React.FC = () => {
               </div>
             )}
 
-            {/* Activité récente : topics du user */}
             <div>
-              <h2 className="text-xl font-semibold mb-4">Activité récente</h2>
+              <h2 className="text-xl font-semibold mb-4">Vos topics récents</h2>
               <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg divide-y ${darkMode ? 'divide-gray-600' : 'divide-gray-200'}`}>
                 {recentActivities.length === 0 && (
-                  <div className="p-4 text-gray-400">Aucune activité récente.</div>
+                  <div className="p-4 text-gray-400">Aucun topic créé récemment.</div>
                 )}
                 {recentActivities.map((activity, index) => (
                   <div
-                    key={index}
+                    key={activity.id}
                     className="p-4 flex justify-between items-center w-full hover:bg-blue-50 dark:hover:bg-gray-600 transition"
                   >
                     <button
@@ -499,7 +468,10 @@ const EditProfile: React.FC = () => {
                       style={{ cursor: "pointer" }}
                       type="button"
                     >
-                      <span>{activity.content}</span>
+                      <span className="font-semibold">{activity.title}</span>
+                      {activity.content && (
+                        <span className="ml-2 text-gray-500 italic">– {activity.content}</span>
+                      )}
                       <span className="ml-2 text-sm text-gray-500">{activity.date}</span>
                     </button>
                     <button
@@ -529,12 +501,10 @@ const EditProfile: React.FC = () => {
               </div>
             </div>
           </div>
-          {/* SUPPRIMÉ : colonne des badges */}
         </div>
       </div>
     </div>
   );
 };
 
-// Export the component
 export default EditProfile;
