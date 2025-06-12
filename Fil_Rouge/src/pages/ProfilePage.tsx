@@ -3,6 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { Mail, Calendar, Trophy, TowerControl as GameController, MessageSquare, Star, Edit, Save, X } from 'lucide-react';
 import type { User } from '../types/User';
+import { useNavigate } from 'react-router-dom';
 
 const MAX_SIZE_MB = 5;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -13,6 +14,7 @@ const EditProfile: React.FC = () => {
   // Typage explicite du user
   const { user, darkMode, setUser } = useStore() as { user: User | null; darkMode: boolean; setUser: (u: User) => void };
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
 
   // Pré-remplir le formulaire avec les vraies infos du user connecté
   const [formData, setFormData] = useState({
@@ -70,7 +72,7 @@ const EditProfile: React.FC = () => {
   };
 
   // Activité récente (adapte selon ton backend)
-  const recentActivities = user?.recentActivities ?? [];
+  const [recentActivities, setRecentActivities] = useState<{ id: number; content: string; date: string }[]>([]);
 
   // Function to validate email format
   const validateEmail = (email: string) => {
@@ -210,6 +212,50 @@ const EditProfile: React.FC = () => {
     return url;
   };
 
+  // Récupère les topics du user pour l'activité récente
+  useEffect(() => {
+    const fetchUserTopics = async () => {
+      if (!user) return;
+      try {
+        const res = await fetch(`/api/users/${user.id}/topics`);
+        if (!res.ok) return;
+        const topics = await res.json();
+        // On formate pour l'affichage dans l'activité récente
+        setRecentActivities(
+          topics.map((topic: any) => ({
+            id: topic.id, // <-- ajoute l'id
+            content: `Nouveau topic : ${topic.title}`,
+            date: new Date(topic.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+          }))
+        );
+      } catch {}
+    };
+    fetchUserTopics();
+  }, [user]);
+  
+  // Handle topic editing
+  const handleEditTopic = (topicId: number) => {
+    navigate(`/tchat/${topicId}?edit=1`);
+  };
+
+  // Handle topic deletion
+  const handleDeleteTopic = async (topicId: number) => {
+    if (!window.confirm("Supprimer ce topic ? Cette action est irréversible.")) return;
+    try {
+      const res = await fetch(`/api/topics/${topicId}/${user?.id}`, {
+        method: "DELETE"
+      });
+      if (res.ok) {
+        setRecentActivities(acts => acts.filter(a => a.id !== topicId));
+        alert("Topic supprimé !");
+      } else {
+        alert("Erreur lors de la suppression.");
+      }
+    } catch {
+      alert("Erreur réseau lors de la suppression.");
+    }
+  };
+
   if (!user) {
     return (
       <div className="text-center py-10">
@@ -294,8 +340,6 @@ const EditProfile: React.FC = () => {
                 <h1 className="text-2xl font-bold">{user.username}</h1>
               )}
               <p className="text-gray-600 dark:text-gray-400 flex items-center">
-                <Trophy size={16} className="mr-1 text-yellow-500" />
-                Elite de la communauté
               </p>
             </div>
           </div>
@@ -437,34 +481,7 @@ const EditProfile: React.FC = () => {
               </div>
             )}
 
-            {/* Statistics section */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Statistiques</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg text-center`}>
-                  <GameController className="mx-auto mb-2 text-blue-500" size={24} />
-                  <div className="text-2xl font-bold">{profileStats.gamesPlayed}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Jeux joués</div>
-                </div>
-                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg text-center`}>
-                  <Trophy className="mx-auto mb-2 text-yellow-500" size={24} />
-                  <div className="text-2xl font-bold">{profileStats.tournamentsWon}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Tournois gagnés</div>
-                </div>
-                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg text-center`}>
-                  <MessageSquare className="mx-auto mb-2 text-green-500" size={24} />
-                  <div className="text-2xl font-bold">{profileStats.discussionsStarted}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Discussions</div>
-                </div>
-                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg text-center`}>
-                  <Star className="mx-auto mb-2 text-purple-500" size={24} />
-                  <div className="text-2xl font-bold">{profileStats.reputation}</div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Réputation</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Recent activity section */}
+            {/* Activité récente : topics du user */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Activité récente</h2>
               <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg divide-y ${darkMode ? 'divide-gray-600' : 'divide-gray-200'}`}>
@@ -472,34 +489,47 @@ const EditProfile: React.FC = () => {
                   <div className="p-4 text-gray-400">Aucune activité récente.</div>
                 )}
                 {recentActivities.map((activity, index) => (
-                  <div key={index} className="p-4 flex justify-between items-center">
-                    <span>{activity.content}</span>
-                    <span className="text-sm text-gray-500">{activity.date}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Badges (exemple statique) */}
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Badges</h2>
-              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 grid grid-cols-3 gap-2`}>
-                {[...Array(6)].map((_, index) => (
-                  <div 
+                  <div
                     key={index}
-                    className={`${
-                      darkMode ? 'bg-gray-600' : 'bg-white'
-                    } p-2 rounded-lg flex items-center justify-center`}
+                    className="p-4 flex justify-between items-center w-full hover:bg-blue-50 dark:hover:bg-gray-600 transition"
                   >
-                    <Trophy size={24} className="text-yellow-500" />
+                    <button
+                      className="flex-1 text-left"
+                      onClick={() => navigate(`/tchat/${activity.id}`)}
+                      style={{ cursor: "pointer" }}
+                      type="button"
+                    >
+                      <span>{activity.content}</span>
+                      <span className="ml-2 text-sm text-gray-500">{activity.date}</span>
+                    </button>
+                    <button
+                      className="ml-3 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition w-9 h-9"
+                      onClick={e => {
+                        e.stopPropagation();
+                        navigate(`/tchat/${activity.id}`, { state: { openEdit: true } });
+                      }}
+                      title="Modifier"
+                      type="button"
+                    >
+                      <Edit size={20} />
+                    </button>
+                    <button
+                      className="ml-2 flex items-center justify-center rounded-full bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800 transition w-9 h-9"
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleDeleteTopic(activity.id);
+                      }}
+                      title="Supprimer"
+                      type="button"
+                    >
+                      <X size={20} />
+                    </button>
                   </div>
                 ))}
               </div>
             </div>
-            {/* Privacy settings, etc. */}
           </div>
+          {/* SUPPRIMÉ : colonne des badges */}
         </div>
       </div>
     </div>

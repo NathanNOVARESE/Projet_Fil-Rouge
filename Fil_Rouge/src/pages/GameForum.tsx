@@ -7,6 +7,7 @@ const GameForum: React.FC = () => {
   const navigate = useNavigate();
   const { user, darkMode } = useStore();
   const [loading, setLoading] = useState(true);
+  const [recentTopics, setRecentTopics] = useState<any[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -14,6 +15,16 @@ const GameForum: React.FC = () => {
     }, 500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Fetch recent topics when user is logged in
+  useEffect(() => {
+    if (user) {
+      fetch('/api/topics?limit=6&sort=desc')
+        .then(res => res.json())
+        .then(data => setRecentTopics(data))
+        .catch(() => setRecentTopics([]));
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -127,71 +138,6 @@ const GameForum: React.FC = () => {
             })}
           </div>
         </section>
-        
-        {/* Statistics section - moved right after Featured Games */}
-        <section className="mb-12">
-          <h3 className="text-3xl font-semibold mb-6 inline-block border-b-4 border-gray-300 pb-2 ">Statistiques</h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 ">
-            <div className={`p-6 rounded-lg shadow-lg border ${
-              darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-            }`}>
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-blue-500 flex items-center justify-center text-white">
-                  <UserRound size={24} />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Joueurs en ligne</p>
-                  <p className="text-2xl font-bold">{onlinePlayers}</p>
-                </div>
-              </div>
-            </div>
-            <div className={`p-6 rounded-lg shadow-lg border ${
-              darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
-            }`}>
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 rounded-full bg-green-500 flex items-center justify-center text-white">
-                  <UserRoundPlus size={24} />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Membres actifs</p>
-                  <p className="text-2xl font-bold">{activeMembers}</p>
-                </div>
-              </div>
-            </div>
-            <div className={`p-6 rounded-lg shadow-lg border cursor-pointer ${
-              darkMode ? 'border-gray-700 bg-gray-800 hover:bg-gray-700' : 'border-gray-200 bg-white hover:bg-gray-200'
-            }`}>
-                <div 
-                className="flex items-center space-x-4 cursor-pointer" 
-                onClick={() => navigate('/discussions')}
-                >
-                <div className="w-12 h-12 rounded-full bg-yellow-500 flex items-center justify-center text-white">
-                  <MessageCircle size={24} />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Discussions</p>
-                  <p className="text-2xl font-bold">{discussionCount}</p>
-                </div>
-                </div>
-            </div>
-            <div className={`p-6 rounded-lg shadow-lg border cursor-pointer  ${
-              darkMode ? 'border-gray-700 bg-gray-800 hover:bg-gray-700' : 'border-gray-200 bg-white hover:bg-gray-200'
-            }`}>
-              <div 
-              className="flex items-center space-x-4"
-              onClick={() => navigate('/competition')}              
-              >
-                <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white ">
-                  <Trophy size={24} />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">Tournois en cours</p>
-                  <p className="text-2xl font-bold">{tournamentsOrganized}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
       </section>
       
       {/* Recent activity section */}
@@ -199,17 +145,39 @@ const GameForum: React.FC = () => {
         <h2 className="text-3xl font-bold mb-6 inline-block border-b-4 border-gray-300 pb-2">Activité récente</h2>
         <div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {recentActivities.map((activity, index) => (
-          <div 
-        key={index} 
-        className={`p-6 rounded-lg shadow-md border ${
-          darkMode ? 'border-gray-700 bg-gray-800 hover:bg-gray-800' : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
-        } transition-transform transform hover:scale-105`}
-          >
-        <p className="text-lg font-medium">{activity}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Il y a 2 heures</p>
-          </div>
-        ))}
+            {recentTopics.length === 0 ? (
+              <div className="col-span-3 text-center text-gray-400 py-8">
+                Aucun topic récent trouvé.
+              </div>
+            ) : (
+              recentTopics.map((topic, index) => (
+                <div
+                  key={topic.id || index}
+                  className={`p-6 rounded-lg shadow-md border ${
+                    darkMode
+                      ? 'border-gray-700 bg-gray-800 hover:bg-gray-800'
+                      : 'border-gray-200 bg-gray-50 hover:bg-gray-100'
+                  } transition-transform transform hover:scale-105 cursor-pointer`}
+                  onClick={() => navigate(`/tchat/${topic.id}`)}
+                >
+                  <p className="text-lg font-medium">{topic.title}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                    {topic.category ? topic.category : 'Sans catégorie'}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {topic.createdAt
+                      ? new Date(topic.createdAt).toLocaleString('fr-FR', {
+                          day: '2-digit',
+                          month: 'short',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })
+                      : ''}
+                  </p>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </section>

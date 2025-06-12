@@ -12,8 +12,6 @@ const AdminDashboard: React.FC = () => {
   const [forums, setForums] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
-  const [selectedForum, setSelectedForum] = useState<number | null>(null);
-  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Redirige si pas admin
@@ -21,31 +19,26 @@ const AdminDashboard: React.FC = () => {
     if (!user || !user.isAdmin) navigate('/');
   }, [user, navigate]);
 
-  // Fetch data selon le tab
+  // Fetch toutes les tables à chaque changement d'onglet
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('token');
         if (tab === 'users') {
           const response = await fetch(`${BACKEND_URL}/users`);
-          const data = await response.json();
-          setUsers(data);
+          setUsers(await response.json());
         }
         if (tab === 'forums') {
           const response = await fetch(`${BACKEND_URL}/forums`);
-          const data = await response.json();
-          setForums(data);
+          setForums(await response.json());
         }
-        if (tab === 'topics' && selectedForum) {
-          const response = await fetch(`${BACKEND_URL}/forums/${selectedForum}/topics`);
-          const data = await response.json();
-          setTopics(data);
+        if (tab === 'topics') {
+          const response = await fetch(`${BACKEND_URL}/topics`);
+          setTopics(await response.json());
         }
-        if (tab === 'posts' && selectedTopic) {
-          const response = await fetch(`${BACKEND_URL}/topics/${selectedTopic}/posts`);
-          const data = await response.json();
-          setPosts(data);
+        if (tab === 'posts') {
+          const response = await fetch(`${BACKEND_URL}/posts`);
+          setPosts(await response.json());
         }
       } catch (error) {
         console.error("Erreur lors du chargement des données:", error);
@@ -53,52 +46,67 @@ const AdminDashboard: React.FC = () => {
         setIsLoading(false);
       }
     };
-
     fetchData();
-  }, [tab, selectedForum, selectedTopic]);
+  }, [tab]);
 
-  const deleteUser = async (id: number) => {
-    if (!window.confirm('Voulez-vous vraiment supprimer cet utilisateur ?')) return;
+  // Suppression générique
+  const handleDelete = async (type: 'users' | 'forums' | 'topics' | 'posts', id: number) => {
+    if (!window.confirm('Voulez-vous vraiment supprimer cet élément ?')) return;
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${BACKEND_URL}/api/users/${id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const res = await fetch(`${BACKEND_URL}/api/${type}/${id}`, { method: 'DELETE' });
       if (!res.ok) {
         const error = await res.json();
         alert(error.error || "Erreur lors de la suppression");
         return;
       }
-      setUsers(users.filter(u => u.id !== id));
+      if (type === 'users') setUsers(users.filter(u => u.id !== id));
+      if (type === 'forums') setForums(forums.filter(f => f.id !== id));
+      if (type === 'topics') setTopics(topics.filter(t => t.id !== id));
+      if (type === 'posts') setPosts(posts.filter(p => p.id !== id));
     } catch (err) {
       alert("Erreur réseau lors de la suppression");
     }
   };
 
-  const updateUserRole = async (id: number, isAdmin: boolean) => {
+  // Edition générique (inline)
+  const handleEdit = async (type: 'users' | 'forums' | 'topics' | 'posts', id: number, data: any) => {
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${BACKEND_URL}/api/users/${id}`, {
+      const res = await fetch(`${BACKEND_URL}/api/${type}/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ isAdmin }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
       if (!res.ok) {
         const error = await res.json();
-        alert(error.error || "Erreur lors du changement de rôle");
+        alert(error.error || "Erreur lors de la modification");
         return;
       }
-      const data = await res.json();
-      setUsers(users.map(u => u.id === id ? data.user : u));
+      const updated = await res.json();
+      if (type === 'users') setUsers(users.map(u => u.id === id ? updated.user : u));
+      if (type === 'forums') setForums(forums.map(f => f.id === id ? updated.forum : f));
+      if (type === 'topics') setTopics(topics.map(t => t.id === id ? updated.topic : t));
+      if (type === 'posts') setPosts(posts.map(p => p.id === id ? updated.post : p));
     } catch (err) {
-      alert("Erreur réseau lors du changement de rôle");
+      alert("Erreur réseau lors de la modification");
     }
+  };
+
+  // Simple inline edit component
+  const EditableCell = ({ value, onSave }: { value: string, onSave: (v: string) => void }) => {
+    const [edit, setEdit] = useState(false);
+    const [val, setVal] = useState(value);
+    return edit ? (
+      <input
+        className="border px-1 py-0.5 rounded"
+        value={val}
+        onChange={e => setVal(e.target.value)}
+        onBlur={() => { setEdit(false); onSave(val); }}
+        onKeyDown={e => { if (e.key === 'Enter') { setEdit(false); onSave(val); } }}
+        autoFocus
+      />
+    ) : (
+      <span onClick={() => setEdit(true)} className="cursor-pointer hover:underline">{value}</span>
+    );
   };
 
   return (
@@ -173,36 +181,35 @@ const AdminDashboard: React.FC = () => {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rôle</th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nom</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rôle</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {users.map((u) => (
                     <tr key={u.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{u.username}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{u.email}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <td className="px-6 py-4">{u.id}</td>
+                      <td className="px-6 py-4">
+                        <EditableCell value={u.username} onSave={val => handleEdit('users', u.id, { ...u, username: val })} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <EditableCell value={u.email} onSave={val => handleEdit('users', u.id, { ...u, email: val })} />
+                      </td>
+                      <td className="px-6 py-4">
                         <select
                           value={u.isAdmin ? 'admin' : 'user'}
-                          onChange={(e) => updateUserRole(u.id, e.target.value === 'admin')}
+                          onChange={e => handleEdit('users', u.id, { ...u, isAdmin: e.target.value === 'admin' })}
                           className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                         >
                           <option value="user">User</option>
                           <option value="admin">Admin</option>
                         </select>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <button
-                          onClick={() => deleteUser(u.id)}
-                          className="text-red-600 hover:text-red-900 mr-4"
-                        >
-                          Supprimer
-                        </button>
+                      <td className="px-6 py-4">
+                        <button onClick={() => handleDelete('users', u.id)} className="text-red-600 hover:text-red-900 mr-4">Supprimer</button>
                       </td>
                     </tr>
                   ))}
@@ -215,105 +222,100 @@ const AdminDashboard: React.FC = () => {
         {/* Forums Tab */}
         {!isLoading && tab === 'forums' && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-medium text-gray-900">Liste des Forums</h2>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titre</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {forums.map((f) => (
+                    <tr key={f.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">{f.id}</td>
+                      <td className="px-6 py-4">
+                        <EditableCell value={f.title} onSave={val => handleEdit('forums', f.id, { ...f, title: val })} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <EditableCell value={f.description || ''} onSave={val => handleEdit('forums', f.id, { ...f, description: val })} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <button onClick={() => handleDelete('forums', f.id)} className="text-red-600 hover:text-red-900 mr-4">Supprimer</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <ul className="divide-y divide-gray-200">
-              {forums.map((f) => (
-                <li key={f.id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-indigo-600">{f.title}</h3>
-                      <p className="text-sm text-gray-500 mt-1">{f.description || 'Aucune description'}</p>
-                    </div>
-                    <button
-                      onClick={() => { setSelectedForum(f.id); setTab('topics'); }}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                      Voir Topics
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </div>
         )}
 
         {/* Topics Tab */}
-        {!isLoading && tab === 'topics' && selectedForum && (
+        {!isLoading && tab === 'topics' && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <div>
-                <button
-                  onClick={() => setTab('forums')}
-                  className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  ← Retour aux Forums
-                </button>
-              </div>
-              <h2 className="text-lg font-medium text-gray-900">Topics du Forum</h2>
-              <div></div> {/* Empty div for flex spacing */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Titre</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ForumId</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Auteur</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {topics.map((t) => (
+                    <tr key={t.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">{t.id}</td>
+                      <td className="px-6 py-4">
+                        <EditableCell value={t.title} onSave={val => handleEdit('topics', t.id, { ...t, title: val })} />
+                      </td>
+                      <td className="px-6 py-4">{t.forumId || '-'}</td>
+                      <td className="px-6 py-4">{t.author?.username || t.createdBy || '-'}</td>
+                      <td className="px-6 py-4">
+                        <button onClick={() => handleDelete('topics', t.id)} className="text-red-600 hover:text-red-900 mr-4">Supprimer</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <ul className="divide-y divide-gray-200">
-              {topics.map((t) => (
-                <li key={t.id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-sm font-medium text-gray-900">{t.title}</h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Créé par: {t.author?.username || 'Inconnu'} • {new Date(t.createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => { setSelectedTopic(t.id); setTab('posts'); }}
-                      className="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                      Voir Posts
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </div>
         )}
 
         {/* Posts Tab */}
-        {!isLoading && tab === 'posts' && selectedTopic && (
+        {!isLoading && tab === 'posts' && (
           <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-              <div>
-                <button
-                  onClick={() => setTab('topics')}
-                  className="inline-flex items-center px-3 py-1 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  ← Retour aux Topics
-                </button>
-              </div>
-              <h2 className="text-lg font-medium text-gray-900">Posts du Topic</h2>
-              <div></div> {/* Empty div for flex spacing */}
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Auteur</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contenu</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {posts.map((p) => (
+                    <tr key={p.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4">{p.id}</td>
+                      <td className="px-6 py-4">{p.author?.username || p.createdBy || '-'}</td>
+                      <td className="px-6 py-4">
+                        <EditableCell value={p.content} onSave={val => handleEdit('posts', p.id, { ...p, content: val })} />
+                      </td>
+                      <td className="px-6 py-4">
+                        <button onClick={() => handleDelete('posts', p.id)} className="text-red-600 hover:text-red-900 mr-4">Supprimer</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <ul className="divide-y divide-gray-200">
-              {posts.map((p) => (
-                <li key={p.id} className="px-6 py-4 hover:bg-gray-50">
-                  <div className="flex space-x-4">
-                    <div className="flex-shrink-0">
-                      <div className="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
-                        {p.author?.username?.charAt(0).toUpperCase() || '?'}
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between">
-                        <p className="text-sm font-medium text-gray-900">{p.author?.username || 'Anonyme'}</p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(p.createdAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <p className="text-sm text-gray-800 mt-1 whitespace-pre-line">{p.content}</p>
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
           </div>
         )}
       </main>

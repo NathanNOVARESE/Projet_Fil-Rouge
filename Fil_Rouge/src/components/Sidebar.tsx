@@ -15,7 +15,6 @@ const Sidebar: React.FC = () => {
   const { user } = useStore();
   const menuItems = [
     { path: '/', label: 'Accueil', icon: <Home size={20} /> },
-    { path: '/trends', label: 'Tendances', icon: <TrendingUp size={20} /> },
     { path: '/discussions', label: 'Discussions', icon: <MessageSquare size={20} /> },
     { path: '/games', label: 'Jeux', icon: <Gamepad2 size={20} /> },
     { path: '/competition', label: 'Compétition', icon: <Trophy size={20} /> },
@@ -33,7 +32,7 @@ const Sidebar: React.FC = () => {
           darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
         } ${
           collapsed ? 'w-16' : 'w-64'
-        } h-[25%] transition-all duration-300 shadow-md hidden md:block relative`}
+        } h-full min-h-screen transition-all duration-300 shadow-md hidden md:block relative`}
       >
         {/* Bouton de toggle (uniquement en desktop) */}
         <button

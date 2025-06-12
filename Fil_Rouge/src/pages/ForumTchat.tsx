@@ -1,17 +1,19 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '../lib/store';
-import { Send, ArrowLeft, MoreVertical, Smile, Image as ImageIcon, File, Heart } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Send, ArrowLeft, MoreVertical, Smile, Image as ImageIcon, File, Heart, MessageSquare } from 'lucide-react';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 const ForumChat: React.FC = () => {
   const { user, darkMode } = useStore();
   const navigate = useNavigate();
   const { id: topicId } = useParams();
+  const location = useLocation();
 
   const [messages, setMessages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [newMessage, setNewMessage] = useState("");
   const [topic, setTopic] = useState<any>(null);
+  const [creator, setCreator] = useState<any>(null); // Ajoute un state pour le créateur
 
   // Menu déroulant
   const [menuOpen, setMenuOpen] = useState(false);
@@ -20,6 +22,13 @@ const ForumChat: React.FC = () => {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [editTags, setEditTags] = useState("");
+
+  // Référence pour le scroll du tchat
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const params = new URLSearchParams(location.search);
+  const isEditMode = params.get('edit') === '1';
 
   useEffect(() => {
     if (!topicId) return;
@@ -43,12 +52,20 @@ const ForumChat: React.FC = () => {
     fetch(`/api/topics/${topicId}`)
       .then(res => res.json())
       .then(data => {
+        console.log('topic:', data); // Ajoute ceci
         setTopic(data);
         setEditTitle(data.title);
         setEditContent(data.content || "");
         setEditTags(Array.isArray(data.tags) ? data.tags.map(t => t.name).join(", ") : "");
       });
   }, [topicId]);
+
+  useEffect(() => {
+    if (!topic?.createdBy) return;
+    fetch(`/api/users/${topic.createdBy}`)
+      .then(res => res.json())
+      .then(data => setCreator(data));
+  }, [topic?.createdBy]);
 
   const handleSendMessage = async () => {
     if (newMessage.trim() === "" || !user) return;
@@ -107,8 +124,26 @@ const ForumChat: React.FC = () => {
     }
   };
 
+  // Scroll en bas du tchat quand messages change
+  useEffect(() => {
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (location.state && location.state.openEdit) {
+      setEditOpen(true);
+      // Optionnel : nettoie l'état pour éviter la réouverture si on revient en arrière
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
   return (
-    <div className={`flex flex-col h-screen ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
+    <div
+      className={`flex flex-col ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}
+      style={{ height: '87vh', maxHeight: '1000px', minHeight: '600px' }} // Ajuste la hauteur ici si besoin
+    >
       {/* Header section */}
       <div className={`p-4 border-b ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
         <div className="flex items-center justify-between">
@@ -119,16 +154,7 @@ const ForumChat: React.FC = () => {
           {/* Topic title centré */}
           <div className="flex-1 flex justify-center">
             <div className="flex items-center space-x-3">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-                  <img 
-                    src="https://i.pinimg.com/736x/79/d2/60/79d260fd171398929f1c8c2cbc935c90.jpg" 
-                    alt="Groupe" 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800"></span>
-              </div>
+              {/* SUPPRIMÉ : cercle/avatar créateur */}
               <h2 className="font-semibold text-lg">
                 {topic ? topic.title : "Chargement..."}
               </h2>
@@ -213,7 +239,10 @@ const ForumChat: React.FC = () => {
       </div>
 
       {/* Messages section */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-4"
+      >
         {messages.map((message) => (
           <div 
             key={message.id} 
@@ -244,49 +273,30 @@ const ForumChat: React.FC = () => {
                   </div>
                 )}
                 {/* Message content */}
-                <div 
-                  className={`p-3 rounded-lg ${message.isCurrentUser 
-                    ? darkMode 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-blue-500 text-white'
-                    : darkMode 
-                      ? 'bg-gray-700' 
-                      : 'bg-white border border-gray-200'
+                <div
+                  className={`p-3 rounded-lg break-words max-w-xs md:max-w-md lg:max-w-lg ${
+                    message.isCurrentUser
+                      ? darkMode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-blue-500 text-white'
+                      : darkMode
+                        ? 'bg-gray-700'
+                        : 'bg-white border border-gray-200'
                   }`}
+                  style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
                 >
                   <p>{message.content}</p>
-                </div>
-                {/* Message actions */}
-                <div className={`flex items-center mt-1 space-x-3 ${message.isCurrentUser ? 'justify-end' : 'justify-start'}`}>
-                  <button className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-500">
-                    Reply
-                  </button>
-                  <button className="flex items-center text-xs text-gray-500 dark:text-gray-400 hover:text-red-500">
-                    <Heart size={14} className="mr-1" />
-                    {message.likes}
-                  </button>
                 </div>
               </div>
             </div>
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* Input section */}
       <div className={`p-3 border-t ${darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
         <div className="flex items-center space-x-2">
-          {/* Emoji button */}
-          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            <Smile size={20} className="text-gray-500 dark:text-gray-400" />
-          </button>
-          {/* Image upload button */}
-          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            <ImageIcon size={20} className="text-gray-500 dark:text-gray-400" />
-          </button>
-          {/* File upload button */}
-          <button className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700">
-            <File size={20} className="text-gray-500 dark:text-gray-400" />
-          </button>
           {/* Message input */}
           <input
             type="text"
@@ -309,6 +319,62 @@ const ForumChat: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Edit mode section */}
+      {isEditMode ? (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <form
+            onSubmit={handleEditSubmit}
+            className={`bg-white dark:bg-gray-800 p-6 rounded shadow-lg flex flex-col space-y-4`}
+          >
+            <h3 className="font-bold text-lg mb-2">Modifier le topic</h3>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={e => setEditTitle(e.target.value)}
+              className="border px-3 py-2 rounded"
+              required
+              placeholder="Titre"
+            />
+            <textarea
+              value={editContent}
+              onChange={e => setEditContent(e.target.value)}
+              className="border px-3 py-2 rounded"
+              placeholder="Contenu"
+              rows={3}
+            />
+            <input
+              type="text"
+              value={editTags}
+              onChange={e => setEditTags(e.target.value)}
+              className="border px-3 py-2 rounded"
+              placeholder="Tags (séparés par des virgules)"
+            />
+            <div className="flex space-x-2 justify-end">
+              <button
+                type="button"
+                onClick={() => navigate(`/tchat/${topicId}`)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Sauvegarder
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : (
+        <div className="p-4">
+          {/* Affiche le topic normalement */}
+          <div>
+            {/* ...affichage classique du topic... */}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

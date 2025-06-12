@@ -2,9 +2,9 @@ import express from 'express';
 import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import path from 'path';
+import jwt from 'jsonwebtoken';
 import cors from 'cors';
 
 const app = express();
@@ -261,7 +261,7 @@ app.get('/api/discussions', async (req, res) => {
     const topics = await prisma.topic.findMany({
       include: {
         user: true,
-        posts: true
+        _count: { select: { posts: true } }
       },
       orderBy: { createdAt: 'desc' }
     });
@@ -337,17 +337,11 @@ app.post('/api/topics/:topicId/messages', async (req, res) => {
   }
 });
 
-app.get('/api/topics/:topicId', async (req, res) => {
-  const { topicId } = req.params;
-  try {
-    const topic = await prisma.topic.findUnique({
-      where: { id: Number(topicId) }
-    });
-    if (!topic) return res.status(404).json({ error: "Topic not found" });
-    res.json(topic);
-  } catch (error) {
-    res.status(500).json({ error: "Erreur lors de la récupération du topic" });
-  }
+app.get('/api/topics/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  const topic = await prisma.topic.findUnique({ where: { id } });
+  if (!topic) return res.status(404).json({ error: "Not found" });
+  res.json(topic);
 });
 
 app.get('/api/topics', async (req, res) => {
@@ -366,9 +360,11 @@ app.delete('/api/topics/:topicId/:userId', async (req, res) => {
   if (topic.createdBy !== Number(userId)) return res.status(403).json({ error: "Accès refusé" });
 
   try {
-    // Supprime d'abord les posts liés à ce topic
+    // Supprime les likes liés à ce topic
+    await prisma.like.deleteMany({ where: { topicId: Number(topicId) } });
+    // Supprime les posts liés à ce topic
     await prisma.post.deleteMany({ where: { topicId: Number(topicId) } });
-    // Puis supprime le topic
+    // Supprime le topic
     await prisma.topic.delete({ where: { id: Number(topicId) } });
     res.json({ message: "Topic supprimé" });
   } catch (error) {
@@ -396,6 +392,71 @@ app.put('/api/topics/:topicId', async (req, res) => {
     res.json({ message: "Topic modifié" });
   } catch (error) {
     res.status(400).json({ error: "Erreur lors de la modification du topic" });
+  }
+});
+
+// Express route pour liker un topic
+app.post('/api/discussions/:id/like', async (req, res) => {
+  const topicId = Number(req.params.id);
+  const userId = Number(req.body.userId); // Passe l'id user dans le body
+
+  // Vérifie si déjà liké
+  const alreadyLiked = await prisma.like.findUnique({
+    where: { userId_topicId: { userId, topicId } }
+  });
+  if (alreadyLiked) {
+    return res.status(400).json({ error: "Déjà liké" });
+  }
+
+  // Ajoute le like
+  await prisma.like.create({ data: { userId, topicId } });
+  const topic = await prisma.topic.update({
+    where: { id: topicId },
+    data: { likes: { increment: 1 } }
+  });
+  res.json(topic);
+});
+
+// Vérifie si l'utilisateur a liké un topic
+app.get('/api/discussions/:id/like', async (req, res) => {
+  const topicId = Number(req.params.id);
+  const userId = Number(req.query.userId);
+  if (!userId) return res.json({ liked: false });
+  const like = await prisma.like.findUnique({
+    where: { userId_topicId: { userId, topicId } }
+  });
+  res.json({ liked: !!like });
+});
+
+// Route pour récupérer les topics d'un user
+app.get('/api/users/:userId/topics', async (req, res) => {
+  const userId = Number(req.params.userId);
+  try {
+    const topics = await prisma.topic.findMany({
+      where: { createdBy: userId },
+      orderBy: { createdAt: 'desc' }
+    });
+    res.json(topics);
+  } catch {
+    res.json([]);
+  }
+});
+
+// Exemple Express/Prisma
+app.delete('/api/topics/:id/:userId', async (req, res) => {
+  const topicId = Number(req.params.id);
+
+  try {
+    // Supprime les likes liés à ce topic
+    await prisma.like.deleteMany({ where: { topicId } });
+    // Supprime les messages liés à ce topic
+    await prisma.post.deleteMany({ where: { topicId } });
+    // Supprime le topic
+    await prisma.topic.delete({ where: { id: topicId } });
+
+    res.json({ message: "Topic supprimé" });
+  } catch (error) {
+    res.status(400).json({ error: "Erreur lors de la suppression du topic" });
   }
 });
 

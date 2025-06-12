@@ -12,6 +12,7 @@ const EditProfile: React.FC = () => {
     avatar: user?.avatar || '',
     banner: user?.banner || ''
   });
+  const [editTopic, setEditTopic] = useState<{ id: number, title: string, content: string } | null>(null);
 
   // Mock data
   const profileStats = {
@@ -24,16 +25,19 @@ const EditProfile: React.FC = () => {
 
   const recentActivities = [
     {
+      id: 1,
       type: "comment",
       content: "A commenté sur 'Guide Valorant'",
       date: "Il y a 2 heures"
     },
     {
+      id: 2,
       type: "tournament",
       content: "A participé au tournoi CS2",
       date: "Il y a 1 jour"
     },
     {
+      id: 3,
       type: "discussion",
       content: "A créé une discussion sur League of Legends",
       date: "Il y a 2 jours"
@@ -115,6 +119,11 @@ const EditProfile: React.FC = () => {
               alt="Profile"
               className="w-full h-full object-cover"
             />
+            {isEditing && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center cursor-pointer">
+                <Edit size={28} className="text-white" />
+              </div>
+            )}
           </div>
           {isEditing && (
             <input
@@ -133,6 +142,11 @@ const EditProfile: React.FC = () => {
           className="h-48 bg-cover bg-center relative group"
           style={{ backgroundImage: `url(${formData.banner})` }}
         >
+          {isEditing && (
+            <div className="absolute inset-0 bg-black/30 flex items-center justify-center cursor-pointer">
+              <Edit size={32} className="text-white" />
+            </div>
+          )}
           {isEditing && (
             <input
               type="url"
@@ -292,6 +306,25 @@ const EditProfile: React.FC = () => {
                     <div key={index} className="p-4 flex justify-between items-center">
                       <span>{activity.content}</span>
                       <span className="text-sm text-gray-500">{activity.date}</span>
+                      {activity.type === "discussion" && (
+                        <button
+                          className="ml-3 flex items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800 transition w-9 h-9"
+                          onClick={async () => {
+                            // Va chercher le vrai topic
+                            const res = await fetch(`/api/topics/${activity.id}`);
+                            if (res.ok) {
+                              const topic = await res.json();
+                              setEditTopic({ id: topic.id, title: topic.title, content: topic.content });
+                            } else {
+                              alert("Impossible de charger ce topic.");
+                            }
+                          }}
+                          title="Modifier"
+                          type="button"
+                        >
+                          <Edit size={20} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -404,6 +437,58 @@ const EditProfile: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal pour éditer un topic */}
+      {editTopic && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              // Appelle ici ton endpoint pour modifier le topic
+              await fetch(`/api/topics/${editTopic.id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title: editTopic.title, content: editTopic.content }),
+              });
+              setEditTopic(null);
+              // Optionnel : refresh la liste des topics
+            }}
+            className="bg-white dark:bg-gray-800 p-6 rounded shadow-lg flex flex-col space-y-4"
+          >
+            <h3 className="font-bold text-lg mb-2">Modifier le topic</h3>
+            <input
+              type="text"
+              value={editTopic.title}
+              onChange={e => setEditTopic({ ...editTopic, title: e.target.value })}
+              className="border px-3 py-2 rounded"
+              required
+              placeholder="Titre"
+            />
+            <textarea
+              value={editTopic.content}
+              onChange={e => setEditTopic({ ...editTopic, content: e.target.value })}
+              className="border px-3 py-2 rounded"
+              placeholder="Contenu"
+              rows={3}
+            />
+            <div className="flex space-x-2 justify-end">
+              <button
+                type="button"
+                onClick={() => setEditTopic(null)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              >
+                Sauvegarder
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
-import { MessageSquare, Search, Plus, X, Filter, ThumbsUp, Eye, Clock, Tag as TagIcon, Send } from 'lucide-react';
+import { MessageSquare, Search, Plus, X, Filter, ThumbsUp, Clock, Tag as TagIcon, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; // Hook for navigation
 
 // Define interfaces for tags and discussions
@@ -34,6 +34,7 @@ const DiscussionsPage: React.FC = () => {
   const [filterGame, setFilterGame] = useState('ALL');
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'likes'>('date'); // State pour le tri
   const navigate = useNavigate();
 
   // Form states for creating a new discussion
@@ -45,6 +46,9 @@ const DiscussionsPage: React.FC = () => {
   const [newTagName, setNewTagName] = useState('');
   const [selectedForumId, setSelectedForumId] = useState('1');
   const [selectedTopicId, setSelectedTopicId] = useState('');
+
+  // Liked discussions state
+  const [likedDiscussions, setLikedDiscussions] = useState<number[]>([]);
 
   // Available tags for selection
   const availableTags: Tag[] = [
@@ -99,21 +103,26 @@ const DiscussionsPage: React.FC = () => {
   };
 
   // Filter discussions based on search term, game, and category
-  const filteredDiscussions = discussions.filter(discussion => {
-    const search = searchTerm.trim().toLowerCase();
-
-    // Recherche sur le titre, le jeu ou la catégorie
-    const matchesSearch =
-      !search ||
-      discussion.title.toLowerCase().includes(search) ||
-      discussion.game.toLowerCase().includes(search) ||
-      discussion.category.toLowerCase().includes(search);
-
-    const matchesGame = filterGame === 'ALL' || discussion.game === filterGame;
-    const matchesCategory = filterCategory === 'ALL' || discussion.category === filterCategory;
-
-    return matchesSearch && matchesGame && matchesCategory;
-  });
+  const filteredDiscussions = discussions
+    .filter(discussion => {
+      const search = searchTerm.trim().toLowerCase();
+      const matchesSearch =
+        !search ||
+        discussion.title.toLowerCase().includes(search) ||
+        discussion.game.toLowerCase().includes(search) ||
+        discussion.category.toLowerCase().includes(search) ||
+        (discussion.tags && discussion.tags.some(tag => tag.name.toLowerCase().includes(search)));
+      const matchesGame = filterGame === 'ALL' || discussion.game === filterGame;
+      const matchesCategory = filterCategory === 'ALL' || discussion.category === filterCategory;
+      return matchesSearch && matchesGame && matchesCategory;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'likes') {
+        return b.likes - a.likes;
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
 
   // If the user is not logged in, show a message
   if (!user) {
@@ -204,11 +213,40 @@ const DiscussionsPage: React.FC = () => {
               : [],
           views: d.views || 0,
           likes: d.likes || 0,
-          replies: d.replies || 0,
+          replies: d._count?.posts ?? 0, // <-- Utilise le vrai nombre de messages
         }));
         setDiscussions(mapped);
       });
   }, []);
+
+  // Format the date to YYYY-MM-DD
+  const formatDate = (dateString: string) => {
+    const d = new Date(dateString);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Handle like action
+  const handleLike = async (discussionId: number) => {
+    if (likedDiscussions.includes(discussionId)) return;
+    const res = await fetch(`/api/discussions/${discussionId}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id })
+    });
+    if (res.ok) {
+      setDiscussions(discussions =>
+        discussions.map(d =>
+          d.id === discussionId
+            ? { ...d, likes: d.likes + 1 }
+            : d
+        )
+      );
+      setLikedDiscussions([...likedDiscussions, discussionId]);
+    }
+  };
 
   return (
     <div className={`p-4 md:p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -425,7 +463,7 @@ const DiscussionsPage: React.FC = () => {
         {/* Filters section */}
         {showFilters && (
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} mb-4`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Jeu</label>
                 <select
@@ -460,6 +498,21 @@ const DiscussionsPage: React.FC = () => {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Trier par</label>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value as 'date' | 'likes')}
+                  className={`w-full px-3 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="date">Plus récent</option>
+                  <option value="likes">Plus de likes</option>
+                </select>
+              </div>
             </div>
           </div>
         )}
@@ -486,7 +539,7 @@ const DiscussionsPage: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-semibold mb-1">{discussion.title}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      by {discussion.author.name} • {discussion.createdAt}
+                      by {discussion.author.name} • {formatDate(discussion.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2 mr-2">
@@ -523,12 +576,27 @@ const DiscussionsPage: React.FC = () => {
 
                 <div className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center">
-                    <Eye size={16} className="mr-1" />
-                    <span>{discussion.views}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <ThumbsUp size={16} className="mr-1" />
-                    <span>{discussion.likes}</span>
+                    <button
+                      disabled={likedDiscussions.includes(Number(discussion.id))}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleLike(Number(discussion.id));
+                      }}
+                      className={`flex items-center transition ${
+                        likedDiscussions.includes(Number(discussion.id))
+                          ? 'text-blue-600 opacity-100 cursor-not-allowed'
+                          : 'hover:text-blue-600'
+                      }`}
+                      aria-label="Liker"
+                    >
+                      <ThumbsUp
+                        size={16}
+                        className="mr-1"
+                        fill={likedDiscussions.includes(Number(discussion.id)) ? "#2563eb" : "none"}
+                        stroke={likedDiscussions.includes(Number(discussion.id)) ? "#2563eb" : "currentColor"}
+                      />
+                      <span>{discussion.likes}</span>
+                    </button>
                   </div>
                   <div className="flex items-center">
                     <MessageSquare size={16} className="mr-1" />
@@ -536,7 +604,7 @@ const DiscussionsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center">
                     <Clock size={16} className="ml(1" />
-                    <span>{discussion.createdAt}</span>
+                    <span>{formatDate(discussion.createdAt)}</span>
                   </div>
                 </div>
               </div>

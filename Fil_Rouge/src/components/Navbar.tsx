@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store';
-import { Moon, Sun, Bell, User, LogOut } from 'lucide-react';
+import { Moon, Sun, User, LogOut } from 'lucide-react';
 import { Joystick, Search } from 'lucide-react';
 
 const Navbar: React.FC = () => {
@@ -70,12 +70,15 @@ if (user && user.email !== 'demo@example.com') {
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
+          {/* SUPPRIMÉ : bouton notification */}
+          {/* 
           <button
             className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
             aria-label="Notifications"
           >
             <Bell size={20} />
           </button>
+          */}
 
           {/* Menu déroulant profil */}
           <div className="relative">

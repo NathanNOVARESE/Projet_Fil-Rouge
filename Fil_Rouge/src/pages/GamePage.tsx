@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../lib/store';
-import { Gamepad2, Search, Users, Star } from 'lucide-react';
+import { Gamepad2, Search, Users, Star, Trophy } from 'lucide-react'; // Ajoute Trophy à l'import
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 
 const GamesPage: React.FC = () => {
@@ -122,20 +122,17 @@ const GamesPage: React.FC = () => {
               </span>
               
               {/* Game stats */}
-              <div className="grid grid-cols-3 gap-2 mt-4">
-                {/* Players */}
-                <div className="flex flex-col items-center p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <Users size={16} className="mb-1" />
-                  <span className="text-sm">{game.players}</span>
-                </div>
+              <div className="grid grid-cols-2 gap-2 mt-4">
                 {/* Rating */}
-                <div className="flex flex-col items-center p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <Star size={16} className="mb-1" />
-                  <span className="text-sm">{game.rating}</span>
+                <div className="flex flex-col justify-center items-center h-full p-2 bg-gray-100 dark:bg-gray-700 rounded">
+                  <Star size={28} className="mb-2 text-yellow-400" />
+                  <span className="text-lg font-semibold text-black dark:text-white">{game.rating}</span>
                 </div>
                 {/* Tournaments */}
                 <div className="flex flex-col items-center p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <span className="text-sm">Coming soon !</span>
+                  <Trophy size={24} className="mb-1 text-yellow-500" />
+                  <span className="text-lg font-semibold text-black dark:text-white">Tournois</span>
+                  <span className="text-sm text-gray-500 mt-1">À venir</span>
                 </div>
               </div>
             </div>
