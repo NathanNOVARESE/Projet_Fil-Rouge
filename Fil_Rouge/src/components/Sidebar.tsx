@@ -33,7 +33,7 @@ const Sidebar: React.FC = () => {
           darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
         } ${
           collapsed ? 'w-16' : 'w-64'
-        } min-h-screen transition-all duration-300 shadow-md hidden md:block relative`}
+        } h-[25%] transition-all duration-300 shadow-md hidden md:block relative`}
       >
         {/* Bouton de toggle (uniquement en desktop) */}
         <button

@@ -95,13 +95,20 @@ const GameForum: React.FC = () => {
                 'Overwatch 2': 'https://i.pinimg.com/736x/6a/a2/4c/6aa24c0ce2d5823abd694787b125449c.jpg'
               };
 
+              // Définir la route selon le jeu
+              let route = `/presgame?game=${encodeURIComponent(game)}`;
+              if (game === 'Valorant') route = '/gamepresval';
+              if (game === 'League of Legends') route = '/gamepreslol';
+              if (game === 'Apex Legends') route = '/gamepresal';
+              if (game === 'Fortnite') route = '/gamepresfor';
+
               return (
                 <div 
                   key={index} 
                   className={`rounded-lg overflow-hidden shadow-lg border ${
                     darkMode ? 'border-gray-700 bg-gray-800 hover:bg-gray-700' : 'border-gray-200 bg-white hover:bg-gray-100'
                   } transition-colors cursor-pointer`}
-                  onClick={() => navigate(`/presgame?game=${encodeURIComponent(game)}`)}
+                  onClick={() => navigate(route)}
                 >
                   <img 
                     src={gameImages[game] || 'https://via.placeholder.com/150'} 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStore } from '../lib/store';
-import { Gamepad2, Search, Users, Star, Trophy } from 'lucide-react';
+import { Gamepad2, Search, Users, Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
 
 const GamesPage: React.FC = () => {
@@ -14,49 +14,48 @@ const GamesPage: React.FC = () => {
       title: "Valorant",
       category: "FPS Tactique",
       players: 12543,
-      rating: 4.8,
-      tournaments: 24,
-      image: "https://i.pinimg.com/736x/b0/62/1f/b0621f3e685d35f8134cb90230073ff5.jpg"
+      rating: 4.7,
+      image: "https://i.pinimg.com/736x/67/c0/7e/67c07ead929b049e453bedda45980b79.jpg",
+      route: "/gamepresval" 
     },
     {
       title: "League of Legends",
       category: "MOBA",
       players: 34567,
-      rating: 4.5,
-      tournaments: 56,
-      image: "https://images.pexels.com/photos/7915357/pexels-photo-7915357.jpeg"
+      rating: 4.7,
+      image: "https://i.pinimg.com/736x/d1/b1/1d/d1b11d5e4dbae547ac0d651476cec488.jpg",
+      route: "/gamepreslol" 
     },
     {
       title: "Counter-Strike 2",
       category: "FPS",
       players: 45678,
-      rating: 4.7,
-      tournaments: 89,
-      image: "https://images.pexels.com/photos/7862657/pexels-photo-7862657.jpeg"
+      rating: 5.1,
+      image: "https://i.pinimg.com/736x/3c/1e/87/3c1e871625f3c31c9b7d10ed179205e9.jpg",
+      route: "/gameprescs2" 
     },
     {
       title: "Fortnite",
       category: "Battle Royale",
-      players: 23456,
-      rating: 4.3,
-      tournaments: 34,
-      image: "https://i.pinimg.com/736x/51/28/12/512812a989d41afcc6501ef5d9fa4c3d.jpg"
+      rating: 4.9,
+      image: "https://i.pinimg.com/736x/4b/ab/34/4bab34086b84ee2a0e1b66b1e82ed0be.jpg",
+      route: "/gamepresfor" 
     },
     {
       title: "Apex Legends",
       category: "Battle Royale",
       players: 18765,
-      rating: 4.4,
-      tournaments: 28,
-      image: "https://images.pexels.com/photos/7915509/pexels-photo-7915509.jpeg"
+      rating: 6.6,
+      image: "https://i.pinimg.com/736x/bc/93/1b/bc931b47a7edf6322785f1a6427a3653.jpg",
+      route: "/gamepresal" // Route par défaut ou spécifique
     },
     {
       title: "Overwatch 2",
       category: "FPS",
       players: 15678,
-      rating: 4.2,
-      tournaments: 19,
-      image: "https://images.pexels.com/photos/7915264/pexels-photo-7915264.jpeg"
+      rating: 1.8,
+      image: "https://i.pinimg.com/736x/6a/a2/4c/6aa24c0ce2d5823abd694787b125449c.jpg",
+      route: "/gamepresow2" // Route par défaut ou spécifique
     }
   ];
 
@@ -102,14 +101,14 @@ const GamesPage: React.FC = () => {
         {filteredGames.map((game, index) => (
           <div 
             key={index}
-            onClick={() => navigate('/presgame')} // Navigate to the game details page
+            onClick={() => navigate(game.route)} // Utilise la route spécifique du jeu
             className={`${
               darkMode ? 'bg-gray-800' : 'bg-white'
-            } rounded-lg shadow overflow-hidden transition-transform duration-200 hover:transform hover:scale-105 cursor-pointer`} // Add hover effect and pointer cursor
+            } rounded-lg shadow overflow-hidden transition-transform duration-200 hover:transform hover:scale-105 cursor-pointer`}
           >
             {/* Game image */}
             <div 
-              className="h-48 bg-cover bg-center"
+              className="h-[450px] bg-cover bg-center"
               style={{ backgroundImage: `url(${game.image})` }}
             />
             <div className="p-4">
@@ -136,8 +135,7 @@ const GamesPage: React.FC = () => {
                 </div>
                 {/* Tournaments */}
                 <div className="flex flex-col items-center p-2 bg-gray-100 dark:bg-gray-700 rounded">
-                  <Trophy size={16} className="mb-1" />
-                  <span className="text-sm">{game.tournaments}</span>
+                  <span className="text-sm">Coming soon !</span>
                 </div>
               </div>
             </div>
