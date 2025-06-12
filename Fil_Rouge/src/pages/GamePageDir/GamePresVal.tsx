@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useStore } from '../../lib/store';
-import { Star, Users, MessageSquare, Calendar, Download, Gamepad2, ChevronDown, ChevronUp, Share2, Bookmark, Eye, ChevronLeft } from 'lucide-react';
+import { Star, Users, Gamepad2, ChevronDown, ChevronUp, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const GamePres: React.FC = () => {
-  const { user, darkMode } = useStore();
+  const { darkMode } = useStore();
   const [showFullDescription, setShowFullDescription] = useState(false); 
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview'); 

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useStore } from '../../lib/store';
-import { Star, Users, MessageSquare, Calendar, Download, Gamepad2, ChevronDown, ChevronUp, Share2, Bookmark, Eye, ChevronLeft } from 'lucide-react';
+import { Star, Users, Gamepad2, ChevronDown, ChevronUp, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const GamePres: React.FC = () => {
   
-  const { user, darkMode } = useStore();
+  const { darkMode } = useStore();
   const [showFullDescription, setShowFullDescription] = useState(false); 
   const navigate = useNavigate(); 
   const [activeTab, setActiveTab] = useState('overview'); 
@@ -126,7 +126,7 @@ const GamePres: React.FC = () => {
             Retour
           </button>
         </div>
-        
+
         <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} mb-8`}>
           <div className="flex space-x-8">
             {['overview', 'media'].map((tab) => (

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore, Task, Tag } from '../lib/store';
-import { Calendar, Tag as TagIcon, CheckCircle, Circle, Trash, Edit, Flag } from 'lucide-react';
+import { Calendar, CheckCircle, Circle, Trash, Edit, Flag } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;

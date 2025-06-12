@@ -457,7 +457,7 @@ const EditProfile: React.FC = () => {
                 {recentActivities.length === 0 && (
                   <div className="p-4 text-gray-400">Aucun topic créé récemment.</div>
                 )}
-                {recentActivities.map((activity, index) => (
+                {recentActivities.map((activity) => (
                   <div
                     key={activity.id}
                     className="p-4 flex justify-between items-center w-full hover:bg-blue-50 dark:hover:bg-gray-600 transition"
