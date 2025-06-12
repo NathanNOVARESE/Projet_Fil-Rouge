@@ -22,66 +22,23 @@ const TeamsPage: React.FC = () => {
       region: 'Europe',
       established: 2013,
       players: [
-        { name: 'ZywOo', role: 'AWPer', nationality: 'FR' },
-        { name: 'Spinx', role: 'Rifler', nationality: 'IL' },
-        { name: 'flameZ', role: 'Rifler', nationality: 'IL' },
-        { name: 'apEX', role: 'IGL', nationality: 'FR' },
-        { name: 'Magisk', role: 'Support', nationality: 'DK' }
-      ],
-      achievements: [
-        { title: 'Major Paris 2023', year: 2023 },
-        { title: 'IEM Rio 2023', year: 2023 },
-        { title: 'EPL S17', year: 2023 }
+        { name: 'ZywOo', nationality: 'FR' },
+        { name: 'ropz', nationality: 'IL' },
+        { name: 'mezii',  nationality: 'IL' },
+        { name: 'apEX',  nationality: 'FR' },
+        { name: 'flameZ', nationality: 'DK' }
       ],
       socials: {
         twitter: 'https://twitter.com/TeamVitality',
         instagram: 'https://instagram.com/TeamVitality',
         website: 'https://vitality.gg'
       },
-      upcomingMatches: [
-        { opponent: 'FaZe Clan', date: '15/11/2023', event: 'BLAST Premier' },
-        { opponent: 'G2 Esports', date: '18/11/2023', event: 'IEM Cologne' }
-      ],
       stats: {
-        winRate: '72%',
-        recentForm: ['W', 'W', 'L', 'W', 'W'],
+        winRate: '~70%',
+        recentForm: ['L', 'W', 'W', 'W', 'W'],
         worldRanking: 1
       }
     },
-    {
-      id: 2,
-      name: 'T1',
-      logo: '',
-      game: 'League of Legends',
-      region: 'Korea',
-      established: 2002,
-      players: [
-        { name: 'Faker', role: 'Mid', nationality: 'KR' },
-        { name: 'Zeus', role: 'Top', nationality: 'KR' },
-        { name: 'Oner', role: 'Jungle', nationality: 'KR' },
-        { name: 'Gumayusi', role: 'ADC', nationality: 'KR' },
-        { name: 'Keria', role: 'Support', nationality: 'KR' }
-      ],
-      achievements: [
-        { title: 'Worlds 2023', year: 2023 },
-        { title: 'LCK Summer 2023', year: 2023 },
-        { title: 'MSI 2022', year: 2022 }
-      ],
-      socials: {
-        twitter: 'https://twitter.com/T1LoL',
-        instagram: 'https://instagram.com/T1',
-        website: 'https://t1.gg'
-      },
-      upcomingMatches: [
-        { opponent: 'Gen.G', date: '20/11/2023', event: 'LCK Finals' },
-        { opponent: 'DRX', date: '25/11/2023', event: 'KeSPA Cup' }
-      ],
-      stats: {
-        winRate: '68%',
-        recentForm: ['W', 'L', 'W', 'W', 'W'],
-        worldRanking: 2
-      }
-    }
   ];
 
   const games = ['ALL', 'Counter-Strike 2', 'League of Legends', 'Valorant', 'Fortnite', 'Dota 2'];
