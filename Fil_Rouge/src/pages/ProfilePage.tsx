@@ -192,12 +192,12 @@ const EditProfile: React.FC = () => {
     const fetchUserTopics = async () => {
       if (!user) return;
       try {
+        // Récupère tous les topics créés par le user (createdBy)
         const res = await fetch(`/api/users/${user.id}/topics`);
         if (!res.ok) return;
         const topics = await res.json();
-        const userTopics = topics.filter((topic: any) => topic.authorId === user.id);
         setRecentActivities(
-          userTopics.map((topic: any) => ({
+          topics.map((topic: any) => ({
             id: topic.id,
             title: topic.title,
             content: topic.content ? topic.content.slice(0, 80) + (topic.content.length > 80 ? "..." : "") : "",
