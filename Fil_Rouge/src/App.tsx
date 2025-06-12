@@ -34,7 +34,7 @@ function App() {
           <Route path="games" element={<GamesPage />} />
           <Route path="presgame" element={<GamePres />} />
           <Route path="discussions" element={<DiscussionsPage />} />
-          <Route path="tchat" element={<ForumTchat />} />
+          <Route path="/tchat/:id" element={<ForumTchat />} />
           <Route path="competition" element={<CompetitionPage />} />
           <Route path="prescomp" element={<CompetitionPres />} />
           <Route path="teams" element={<TeamsPage/>} />

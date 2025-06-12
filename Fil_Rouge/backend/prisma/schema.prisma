@@ -11,64 +11,54 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement())
-  username   String   @unique
-  email      String   @unique
-  password   String
-  isAdmin    Boolean  @default(false)
-  createdAt  DateTime @default(now())
-  bio        String?
-  avatar     String?
-  banner     String?
-  forums     Forum[]
-  topics     Topic[]
-  posts      Post[]   @relation("UserPosts")
+  id        Int      @id @default(autoincrement())
+  username  String   @unique
+  email     String   @unique
+  password  String
+  isAdmin   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  bio       String?
+  avatar    String?
+  banner    String?
+  forums    Forum[]
+  topics    Topic[]
+  posts     Post[]   @relation("UserPosts") // <--- relation nommée
 }
 
 model Forum {
-  id         Int      @id @default(autoincrement())
-  title      String
+  id          Int      @id @default(autoincrement())
+  title       String
   description String?
-  createdAt  DateTime @default(now())
-  ownerId    Int
-  owner      User     @relation(fields: [ownerId], references: [id])
-  topics     Topic[]
-  posts      Post[]
+  createdAt   DateTime @default(now())
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
 }
 
 model Topic {
-  id         Int      @id @default(autoincrement())
-  title      String
-  content    String
-  game       String
-  category   String
-  tags       String?  // Stocke les tags sous forme de texte JSON
-  createdAt  DateTime @default(now())
-  forumId    Int
-  createdBy  Int
-  forum      Forum    @relation(fields: [forumId], references: [id])
-  user       User     @relation(fields: [createdBy], references: [id])
-  posts      Post[]   @relation("TopicPosts")
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String
+  game      String
+  category  String
+  tags      String?
+  createdAt DateTime @default(now())
+  createdBy Int
+  user      User     @relation(fields: [createdBy], references: [id])
+  posts     Post[]   @relation("TopicPosts")
 }
 
 model Post {
-  id         Int      @id @default(autoincrement())
-  title      String
-  content    String
-  game       String
-  category   String
-  tags       String?  // <-- Correction ici
-  createdAt  DateTime @default(now())
-  forumId    Int
-  createdBy  Int
-  topicId    Int?
-  user       User     @relation("UserPosts", fields: [createdBy], references: [id])
-  forum      Forum    @relation(fields: [forumId], references: [id])
-  topic      Topic?   @relation("TopicPosts", fields: [topicId], references: [id])
+  id        Int      @id @default(autoincrement())
+  content   String
+  topicId   Int
+  createdBy Int
+  createdAt DateTime @default(now())
+  user      User     @relation("UserPosts", fields: [createdBy], references: [id]) // <--- relation nommée
+  topic     Topic    @relation("TopicPosts", fields: [topicId], references: [id]) // <--- relation nommée
 }
 
 model Task {
-  id       Int      @id @default(autoincrement())
+  id       Int    @id @default(autoincrement())
   title    String
-  priority String   // Utilise String à la place de l'enum
+  priority String // Utilise String à la place de l'enum
 }

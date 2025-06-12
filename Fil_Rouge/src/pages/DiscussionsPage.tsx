@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
 import { MessageSquare, Search, Plus, X, Filter, ThumbsUp, Eye, Clock, Tag as TagIcon, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom'; // Hook for navigation
@@ -28,13 +28,13 @@ interface Discussion {
 }
 
 const DiscussionsPage: React.FC = () => {
-  const { user, darkMode } = useStore(); // Access user and dark mode state from the global store
-  const [showForm, setShowForm] = useState(false); // State to toggle the discussion creation form
-  const [searchTerm, setSearchTerm] = useState(''); // State for the search input
-  const [filterGame, setFilterGame] = useState('ALL'); // State for filtering by game
-  const [filterCategory, setFilterCategory] = useState('ALL'); // State for filtering by category
-  const [showFilters, setShowFilters] = useState(false); // State to toggle the filters section
-  const navigate = useNavigate(); // Hook for navigation
+  const { user, darkMode } = useStore();
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterGame, setFilterGame] = useState('ALL');
+  const [filterCategory, setFilterCategory] = useState('ALL');
+  const [showFilters, setShowFilters] = useState(false);
+  const navigate = useNavigate();
 
   // Form states for creating a new discussion
   const [title, setTitle] = useState('');
@@ -43,8 +43,8 @@ const DiscussionsPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState('');
-  const [selectedForumId, setSelectedForumId] = useState('1'); // Default to the first forum
-  const [selectedTopicId, setSelectedTopicId] = useState(''); // State for selected topic ID
+  const [selectedForumId, setSelectedForumId] = useState('1');
+  const [selectedTopicId, setSelectedTopicId] = useState('');
 
   // Available tags for selection
   const availableTags: Tag[] = [
@@ -57,49 +57,8 @@ const DiscussionsPage: React.FC = () => {
     { id: '7', name: 'Casual', color: '#6366F1' }
   ];
 
-  // Mock data for discussions
-  const [discussions, setDiscussions] = useState<Discussion[]>([
-    {
-      id: '1',
-      title: "Guide des meilleures armes dans Valorant",
-      content: "Discussion sur les meilleures armes et leurs utilisations...",
-      author: {
-        name: "ProGamer",
-        avatar: "https://thispersondoesnotexist.com/"
-      },
-      game: "Valorant",
-      category: "Guides",
-      createdAt: "Il y a 2 heures",
-      views: 1234,
-      likes: 56,
-      replies: 23,
-      tags: [
-        { id: '1', name: 'Guide', color: '#3B82F6' },
-        { id: '2', name: 'Débutant', color: '#10B981' },
-        { id: '5', name: 'Stratégie', color: '#F59E0B' }
-      ]
-    },
-    {
-      id: '2',
-      title: "Meta actuelle dans League of Legends",
-      content: "Analyse de la meta actuelle et des champions dominants...",
-      author: {
-        name: "LoLMaster",
-        avatar: "https://thispersondoesnotexist.com/"
-      },
-      game: "League of Legends",
-      category: "Discussion",
-      createdAt: "Il y a 5 heures",
-      views: 2345,
-      likes: 89,
-      replies: 45,
-      tags: [
-        { id: '4', name: 'Meta', color: '#8B5CF6' },
-        { id: '3', name: 'Avancé', color: '#EF4444' },
-        { id: '6', name: 'Classé', color: '#EC4899' }
-      ]
-    }
-  ]);
+  // Liste des discussions (initialement vide, alimentée par l'API)
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
 
   // List of games and categories for filtering
   const games = ["Valorant", "League of Legends", "CS2", "Fortnite", "Apex Legends"];
@@ -141,16 +100,19 @@ const DiscussionsPage: React.FC = () => {
 
   // Filter discussions based on search term, game, and category
   const filteredDiscussions = discussions.filter(discussion => {
-    if (searchTerm && !discussion.title.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    if (filterGame !== 'ALL' && discussion.game !== filterGame) {
-      return false;
-    }
-    if (filterCategory !== 'ALL' && discussion.category !== filterCategory) {
-      return false;
-    }
-    return true;
+    const search = searchTerm.trim().toLowerCase();
+
+    // Recherche sur le titre, le jeu ou la catégorie
+    const matchesSearch =
+      !search ||
+      discussion.title.toLowerCase().includes(search) ||
+      discussion.game.toLowerCase().includes(search) ||
+      discussion.category.toLowerCase().includes(search);
+
+    const matchesGame = filterGame === 'ALL' || discussion.game === filterGame;
+    const matchesCategory = filterCategory === 'ALL' || discussion.category === filterCategory;
+
+    return matchesSearch && matchesGame && matchesCategory;
   });
 
   // If the user is not logged in, show a message
@@ -173,13 +135,11 @@ const DiscussionsPage: React.FC = () => {
   const handleCreateDiscussion = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Vérifie si le forum et l'utilisateur sont définis
     if (!selectedForumId || !user?.id) {
       alert("Forum ou utilisateur non défini !");
       return;
     }
 
-    // Prépare l'objet à envoyer selon la structure de ta base
     const newDiscussion = {
       title,
       content,
@@ -200,7 +160,6 @@ const DiscussionsPage: React.FC = () => {
       if (!response.ok) throw new Error('Erreur lors de la création');
       const savedDiscussion = await response.json();
 
-      // Ajoute la discussion sauvegardée à l'état local pour affichage immédiat
       setDiscussions([
         {
           ...savedDiscussion,
@@ -211,7 +170,7 @@ const DiscussionsPage: React.FC = () => {
           views: 0,
           likes: 0,
           replies: 0,
-          tags: selectedTags, // Pour l'affichage local
+          tags: selectedTags,
         },
         ...discussions
       ]);
@@ -221,6 +180,35 @@ const DiscussionsPage: React.FC = () => {
       alert('Erreur lors de la création de la discussion');
     }
   };
+
+  // Fetch discussions from the server
+  useEffect(() => {
+    fetch('/api/discussions')
+      .then(res => res.json())
+      .then(data => {
+        const mapped = data.map((d: any) => ({
+          ...d,
+          author: d.user
+            ? {
+                name: d.user.username || d.user.name || "Anonyme",
+                avatar: d.user.avatar || "https://thispersondoesnotexist.com/"
+              }
+            : {
+                name: "Anonyme",
+                avatar: "https://thispersondoesnotexist.com/"
+              },
+          tags: Array.isArray(d.tags)
+            ? d.tags
+            : typeof d.tags === "string"
+              ? JSON.parse(d.tags)
+              : [],
+          views: d.views || 0,
+          likes: d.likes || 0,
+          replies: d.replies || 0,
+        }));
+        setDiscussions(mapped);
+      });
+  }, []);
 
   return (
     <div className={`p-4 md:p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -482,15 +470,15 @@ const DiscussionsPage: React.FC = () => {
         {filteredDiscussions.map((discussion) => (
           <button
             key={discussion.id}
-            onClick={() => navigate('/tchat')} // Redirect to the chat page
+            onClick={() => navigate(`/tchat/${discussion.id}`)} // Redirect to the chat page
             className={`w-full text-left ${
               darkMode ? 'bg-gray-800' : 'bg-white'
             } rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg`}
           >
             <div className="flex items-start space-x-4">
               <img
-                src={discussion.author.avatar}
-                alt={discussion.author.name}
+                src={discussion.author?.avatar || "https://thispersondoesnotexist.com/"}
+                alt={discussion.author?.name || "Anonyme"}
                 className="w-10 h-10 rounded-full"
               />
               <div className="flex-grow">
@@ -518,13 +506,13 @@ const DiscussionsPage: React.FC = () => {
                 <p className="text-gray-600 dark:text-gray-300 mb-4">{discussion.content}</p>
 
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {discussion.tags.map((tag) => (
+                  {discussion.tags.map((tag, idx) => (
                     <span
-                      key={tag.id}
+                      key={tag.id || tag.name + idx}
                       className="flex items-center px-2 py-1 rounded-full text-sm"
-                      style={{ 
+                      style={{
                         backgroundColor: `${tag.color}20`,
-                        color: tag.color 
+                        color: tag.color
                       }}
                     >
                       <TagIcon size={12} className="mr-1" />

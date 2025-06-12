@@ -220,11 +220,8 @@ app.post('/api/discussions', async (req, res) => {
     category,
     tags,
     createdAt,
-    forumId,
     createdBy
   } = req.body;
-
-  console.log('BODY:', req.body); // <-- Ajout du log
 
   try {
     if (
@@ -232,17 +229,15 @@ app.post('/api/discussions', async (req, res) => {
       !content ||
       !game ||
       !category ||
-      !forumId ||
       !createdBy
     ) {
       return res.status(400).json({ error: "Champs obligatoires manquants" });
     }
 
-    const forumIdNum = Number(forumId);
-    const createdByNum = Number(createdBy);
     const tagsString = Array.isArray(tags) ? JSON.stringify(tags) : tags || null;
 
-    const discussion = await prisma.post.create({
+    // Créer uniquement le topic
+    const topic = await prisma.topic.create({
       data: {
         title,
         content,
@@ -250,15 +245,157 @@ app.post('/api/discussions', async (req, res) => {
         category,
         tags: tagsString,
         createdAt: createdAt ? new Date(createdAt) : new Date(),
-        forumId: forumIdNum,
-        createdBy: createdByNum,
+        createdBy: Number(createdBy)
       }
     });
 
-    res.json(discussion);
+    res.json(topic);
   } catch (error) {
     console.error(error);
     res.status(400).json({ error: "Erreur lors de la création de la discussion" });
+  }
+});
+
+app.get('/api/discussions', async (req, res) => {
+  try {
+    const topics = await prisma.topic.findMany({
+      include: {
+        user: true,
+        posts: true
+      },
+      orderBy: { createdAt: 'desc' }
+    });
+    // Corrige ici : tags sera TOUJOURS un tableau d'objets {name, color}
+    const topicsWithTags = topics.map(topic => {
+      let tags = [];
+      if (Array.isArray(topic.tags)) {
+        tags = topic.tags;
+      } else if (typeof topic.tags === "string") {
+        try {
+          const parsed = JSON.parse(topic.tags);
+          // Si c'est un tableau de string, transforme-le en tableau d'objets
+          if (Array.isArray(parsed)) {
+            tags = parsed.map(tag =>
+              typeof tag === "string"
+                ? { name: tag, color: "#3B82F6" } // couleur par défaut
+                : tag
+            );
+          }
+        } catch {
+          // Si c'est une string brute, on la met dans un tableau d'objet
+          tags = [{ name: topic.tags, color: "#3B82F6" }];
+        }
+      }
+      return { ...topic, tags };
+    });
+    res.json(topicsWithTags);
+  } catch (error) {
+    res.status(500).json({ error: "Erreur lors de la récupération des discussions" });
+  }
+});
+
+app.get('/api/topics/:topicId/messages', async (req, res) => {
+  const { topicId } = req.params;
+  try {
+    const messages = await prisma.post.findMany({
+      where: { topicId: Number(topicId) },
+      include: { user: true },
+      orderBy: { createdAt: 'asc' }
+    });
+    res.json(messages);
+  } catch (error) {
+    res.status(500).json({ error: "Erreur lors de la récupération des messages" });
+  }
+});
+
+app.post('/api/topics/:topicId/messages', async (req, res) => {
+  const { topicId } = req.params;
+  const { content, createdBy } = req.body;
+
+  console.log('POST /api/topics/:topicId/messages', {
+    topicId,
+    body: req.body
+  });
+
+  if (!content || !createdBy) {
+    return res.status(400).json({ error: "Missing content or createdBy" });
+  }
+  try {
+    const message = await prisma.post.create({
+      data: {
+        content,
+        topicId: Number(topicId),      // Prend l'id de l'URL
+        createdBy: Number(createdBy),  // Id de l'utilisateur
+        createdAt: new Date()
+      },
+      include: { user: true }
+    });
+    res.json(message);
+  } catch (error) {
+    console.error(error); // Ajoute ce log pour voir l'erreur exacte dans la console
+    res.status(500).json({ error: "Erreur lors de la création du message" });
+  }
+});
+
+app.get('/api/topics/:topicId', async (req, res) => {
+  const { topicId } = req.params;
+  try {
+    const topic = await prisma.topic.findUnique({
+      where: { id: Number(topicId) }
+    });
+    if (!topic) return res.status(404).json({ error: "Topic not found" });
+    res.json(topic);
+  } catch (error) {
+    res.status(500).json({ error: "Erreur lors de la récupération du topic" });
+  }
+});
+
+app.get('/api/topics', async (req, res) => {
+  try {
+    const topics = await prisma.topic.findMany();
+    res.json(topics); // <-- doit être un tableau ou objet JSON
+  } catch (error) {
+    res.status(500).json({ error: "Erreur lors de la récupération des topics" });
+  }
+});
+
+app.delete('/api/topics/:topicId/:userId', async (req, res) => {
+  const { topicId, userId } = req.params;
+  const topic = await prisma.topic.findUnique({ where: { id: Number(topicId) } });
+  if (!topic) return res.status(404).json({ error: "Topic not found" });
+  if (topic.createdBy !== Number(userId)) return res.status(403).json({ error: "Accès refusé" });
+
+  try {
+    // Supprime d'abord les posts liés à ce topic
+    await prisma.post.deleteMany({ where: { topicId: Number(topicId) } });
+    // Puis supprime le topic
+    await prisma.topic.delete({ where: { id: Number(topicId) } });
+    res.json({ message: "Topic supprimé" });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: "Erreur lors de la suppression du topic" });
+  }
+});
+
+app.put('/api/topics/:topicId', async (req, res) => {
+  const { topicId } = req.params;
+  const { title, content, tags, userId } = req.body;
+  const topic = await prisma.topic.findUnique({ where: { id: Number(topicId) } });
+  if (!topic) return res.status(404).json({ error: "Topic not found" });
+  if (topic.createdBy !== Number(userId)) return res.status(403).json({ error: "Accès refusé" });
+
+  try {
+    await prisma.topic.update({
+      where: { id: Number(topicId) },
+      data: {
+        title,
+        content,
+        tags: JSON.stringify(tags)
+      }
+    });
+    res.json({ message: "Topic modifié" });
+  } catch (error) {
+    res.status(400).json({ error: "Erreur lors de la modification du topic" });
   }
 });
 
