@@ -338,7 +338,7 @@ const EditProfile: React.FC = () => {
         </div>
 
         {/* Profile details and statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8 ml-6 mr-6 mb-6 ">
           <div className="md:col-span-2 space-y-6">
             {/* Information section */}
             <div className="space-y-4">
