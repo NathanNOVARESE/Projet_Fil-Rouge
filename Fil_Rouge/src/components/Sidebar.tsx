@@ -12,6 +12,7 @@ const Sidebar: React.FC = () => {
   const openMobileSidebar = () => setIsMobileOpen(true);
   const closeMobileSidebar = () => setIsMobileOpen(false);
 
+  const { user } = useStore();
   const menuItems = [
     { path: '/', label: 'Accueil', icon: <Home size={20} /> },
     { path: '/trends', label: 'Tendances', icon: <TrendingUp size={20} /> },
@@ -19,7 +20,9 @@ const Sidebar: React.FC = () => {
     { path: '/games', label: 'Jeux', icon: <Gamepad2 size={20} /> },
     { path: '/competition', label: 'Compétition', icon: <Trophy size={20} /> },
     { path: '/teams', label: 'Équipes', icon: <Users size={20} /> },
-    { path: '/admin', label: 'Dashboard', icon: <Lock size={20} /> },
+    ...(user?.isAdmin
+      ? [{ path: '/admin', label: 'Dashboard', icon: <Lock size={20} /> }]
+      : []),
   ];
 
   return (
