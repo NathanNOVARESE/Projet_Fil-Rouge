@@ -22,7 +22,7 @@ model User {
   banner     String?
   forums     Forum[]
   topics     Topic[]
-  posts      Post[]
+  posts      Post[]   @relation("UserPosts")
 }
 
 model Forum {
@@ -33,32 +33,38 @@ model Forum {
   ownerId    Int
   owner      User     @relation(fields: [ownerId], references: [id])
   topics     Topic[]
+  posts      Post[]
 }
 
 model Topic {
   id         Int      @id @default(autoincrement())
   title      String
-  content    String   // Ajouté
-  game       String   // Ajouté
-  category   String   // Ajouté
+  content    String
+  game       String
+  category   String
   tags       String?  // Stocke les tags sous forme de texte JSON
   createdAt  DateTime @default(now())
   forumId    Int
   createdBy  Int
   forum      Forum    @relation(fields: [forumId], references: [id])
   user       User     @relation(fields: [createdBy], references: [id])
-  posts      Post[]
+  posts      Post[]   @relation("TopicPosts")
 }
 
 model Post {
   id         Int      @id @default(autoincrement())
+  title      String
   content    String
+  game       String
+  category   String
+  tags       String?  // <-- Correction ici
   createdAt  DateTime @default(now())
-  updatedAt  DateTime?
-  topicId    Int
-  authorId   Int
-  topic      Topic    @relation(fields: [topicId], references: [id])
-  author     User     @relation(fields: [authorId], references: [id])
+  forumId    Int
+  createdBy  Int
+  topicId    Int?
+  user       User     @relation("UserPosts", fields: [createdBy], references: [id])
+  forum      Forum    @relation(fields: [forumId], references: [id])
+  topic      Topic?   @relation("TopicPosts", fields: [topicId], references: [id])
 }
 
 model Task {

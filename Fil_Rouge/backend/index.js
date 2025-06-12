@@ -213,30 +213,48 @@ app.delete('/api/users/:id', async (req, res) => {
 
 // Création d'une discussion
 app.post('/api/discussions', async (req, res) => {
-  console.log('BODY:', req.body);
-  let { title, content, game, category, tags, createdAt, forumId, createdBy } = req.body;
-  try {
-    forumId = Number(forumId);
-    createdBy = Number(createdBy);
-    tags = Array.isArray(tags) ? tags : [];
+  const {
+    title,
+    content,
+    game,
+    category,
+    tags,
+    createdAt,
+    forumId,
+    createdBy
+  } = req.body;
 
-    if (!title || !content || !game || !category || !forumId || !createdBy) {
+  console.log('BODY:', req.body); // <-- Ajout du log
+
+  try {
+    if (
+      !title ||
+      !content ||
+      !game ||
+      !category ||
+      !forumId ||
+      !createdBy
+    ) {
       return res.status(400).json({ error: "Champs obligatoires manquants" });
     }
 
-    // NE PAS mettre de champ "topic" ici
+    const forumIdNum = Number(forumId);
+    const createdByNum = Number(createdBy);
+    const tagsString = Array.isArray(tags) ? JSON.stringify(tags) : tags || null;
+
     const discussion = await prisma.post.create({
       data: {
         title,
         content,
         game,
         category,
-        tags,
+        tags: tagsString,
         createdAt: createdAt ? new Date(createdAt) : new Date(),
-        forumId,
-        createdBy,
+        forumId: forumIdNum,
+        createdBy: createdByNum,
       }
     });
+
     res.json(discussion);
   } catch (error) {
     console.error(error);
