@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useStore } from '../lib/store';
+import { useStore } from '../../lib/store';
 import { Star, Users, MessageSquare, Calendar, Download, Gamepad2, ChevronDown, ChevronUp, Share2, Bookmark, Eye, ChevronLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,90 +12,48 @@ const GamePres: React.FC = () => {
 
   // Game data mock
   const game = {
-    id: 'valorant',
-    title: 'Valorant',
-    developer: 'Riot Games',
-    releaseDate: '02/06/2020',
-    genre: 'FPS Tactique',
-    platforms: ['PC'],
-    rating: 4.8,
-    reviewsCount: 12453,
-    playersCount: 15000000,
-    description: `Valorant est un jeu de tir tactique en 5v5 où les joueurs incarnent des agents aux capacités uniques. 
-    Chaque partie se déroule en 25 manches maximum, avec une équipe attaquante et une équipe défensive. 
-    Le jeu allie précision mécanique et stratégie d'équipe pour une expérience compétitive intense.
-    
-    ${showFullDescription ? `
-    Avec plus de 20 agents uniques, chaque partie offre des possibilités tactiques différentes. 
-    Les cartes sont conçues pour encourager les combats stratégiques et les prises de décision rapides. 
-    Le système économique entre les manches ajoute une couche supplémentaire de profondeur tactique.
-    ` : ''}`,
+  id: 'apex-legends',
+    title: 'Apex Legends',
+    developer: 'Respawn Entertainment',
+    releaseDate: '04/02/2019',
+    genre: 'Battle Royale',
+    platforms: ['PC', 'PlayStation', 'Xbox', 'Nintendo Switch'],
+    rating: 6.6,
+    reviewsCount: 5000000,
+    playersCount: 130000000,
+    description: `Apex Legends est un battle royale héroïque où des équipes de trois joueurs utilisent des personnages aux capacités uniques pour être les derniers survivants. Avec son système de ping révolutionnaire et son gameplay fluide, Apex a élevé le genre.`,
     features: [
-      'Mode compétitif classé',
-      'Plus de 20 agents uniques',
-      '6 cartes différentes',
-      'Mises à jour régulières',
-      'Anti-cheat robuste'
+      '20+ légendes uniques',
+      'Système de ping innovant',
+      'Gameplay fluide et rapide',
+      'Mises à jour saisonnières',
+      'Mode arenas compétitif'
     ],
     systemRequirements: {
       minimum: {
         os: 'Windows 10 64-bit',
-        processor: 'Intel Core 2 Duo E8400',
-        memory: '4 GB RAM',
-        graphics: 'Intel HD 4000',
-        storage: '10 GB'
+        processor: 'Intel Core i3-6300',
+        memory: '6 GB RAM',
+        graphics: 'Nvidia GeForce GT 640',
+        storage: '75 GB'
       },
       recommended: {
         os: 'Windows 10 64-bit',
-        processor: 'Intel i3-4150',
+        processor: 'Intel Core i5-3570K',
         memory: '8 GB RAM',
-        graphics: 'GeForce GTX 730',
-        storage: '10 GB'
+        graphics: 'Nvidia GeForce GTX 970',
+        storage: '75 GB'
       }
     },
     media: {
-      coverImage: 'https://images4.alphacoders.com/136/1363796.jpeg',
+      coverImage: 'https://images7.alphacoders.com/991/991702.jpg',
       screenshots: [
-        'https://i.pinimg.com/736x/a9/4f/9e/a94f9eede9223fdc14e2dc8909e519bd.jpg',
-        'https://i.pinimg.com/736x/79/a8/a6/79a8a679df49156c06bf28d6db4e64de.jpg',
-        'https://i.pinimg.com/736x/62/c8/dc/62c8dce6249d27bc220dfcffef2fa2b2.jpg'
+        'https://i.pinimg.com/736x/88/e5/87/88e587ea8cd0afa74bb4e12536cd7b6c.jpg',
+        'https://i.pinimg.com/736x/87/ff/52/87ff526fb7625db8f83d185deacde40a.jpg',
+        'https://i.pinimg.com/736x/c8/fe/31/c8fe31a4604536744bfaf7ad6055ac20.jpg'
       ],
-      trailer: 'https://www.youtube.com/embed/e_E9W2vsRbQ'
-    },
-    tournaments: [
-      {
-        id: 1,
-        name: 'Championnat Français Valorant',
-        date: '15/06/2023',
-        prize: '10 000€',
-        participants: 128
-      },
-      {
-        id: 2,
-        name: 'Valorant Community Cup',
-        date: '30/06/2023',
-        prize: '5 000€',
-        participants: 64
-      }
-    ],
-    discussions: [
-      {
-        id: 1,
-        title: 'Meta actuelle des agents',
-        author: 'ProPlayer',
-        replies: 42,
-        views: 1200,
-        lastActivity: 'Il y a 2 heures'
-      },
-      {
-        id: 2,
-        title: 'Guide des positions sur Haven',
-        author: 'CoachValo',
-        replies: 18,
-        views: 850,
-        lastActivity: 'Il y a 5 heures'
-      }
-    ]
+      trailer: 'https://www.youtube.com/embed/oQtHENM_GZU'
+    }
   };
 
   // Toggle description visibility
@@ -119,7 +77,7 @@ const GamePres: React.FC = () => {
           <div className="flex flex-col md:flex-row gap-6">
             <div className="w-48 h-64 rounded-lg overflow-hidden shadow-xl border-4 border-white dark:border-gray-800">
               <img 
-                src="https://i.pinimg.com/736x/67/c0/7e/67c07ead929b049e453bedda45980b79.jpg" 
+                src="https://i.pinimg.com/736x/bc/93/1b/bc931b47a7edf6322785f1a6427a3653.jpg" 
                 alt={`${game.title} logo`} 
                 className="w-full h-full object-cover"
               />
@@ -129,7 +87,7 @@ const GamePres: React.FC = () => {
               <div className="flex flex-wrap items-center gap-4 mb-4 text-gray-300">
                 <span className="flex items-center text-yellow-500">
                   <Star size={18} className="mr-1" />
-                  {game.rating}/5 ({game.reviewsCount.toLocaleString()} avis)
+                  {game.rating}/10 ({game.reviewsCount.toLocaleString()} avis)
                 </span>
                 <span className="flex items-center">
                   <Users size={18} className="mr-1" />
@@ -151,18 +109,6 @@ const GamePres: React.FC = () => {
                     {platform}
                   </span>
                 ))}
-              </div>
-              <div className="flex gap-3">
-                <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg flex items-center transition-colors">
-                  <Download size={18} className="mr-2" />
-                  Installer
-                </button>
-                <button className="p-2 rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                  <Bookmark size={18} />
-                </button>
-                <button className="p-2 rounded-full border border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                  <Share2 size={18} />
-                </button>
               </div>
             </div>
           </div>
@@ -186,7 +132,7 @@ const GamePres: React.FC = () => {
         {/* Tabs Navigation */}
         <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'} mb-8`}>
           <div className="flex space-x-8">
-            {['overview', 'media', 'tournaments', 'community'].map((tab) => (
+            {['overview', 'media'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -200,9 +146,7 @@ const GamePres: React.FC = () => {
                       : 'text-gray-500 hover:text-gray-800'
                 } transition-colors capitalize`}
               >
-                {tab === 'overview' ? 'Aperçu' : 
-                 tab === 'media' ? 'Médias' : 
-                 tab === 'tournaments' ? 'Tournois' : 'Communauté'}
+                {tab === 'overview' ? 'Aperçu' : 'Médias'}
               </button>
             ))}
           </div>
@@ -308,76 +252,8 @@ const GamePres: React.FC = () => {
                 </div>
               </div>
             )}
-
-            {activeTab === 'tournaments' && (
-                <div className="space-y-4">
-                <h2 className="text-2xl font-bold mb-4">Tournois à venir</h2>
-                {game.tournaments.map(tournament => (
-                  <div 
-                  key={tournament.id}
-                  onClick={() => navigate('/prescomp')}
-                  className={`rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 shadow cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors`}
-                  >
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                    <div className="mb-4 md:mb-0">
-                    <h3 className="text-xl font-semibold mb-1">{tournament.name}</h3>
-                    <div className="flex items-center space-x-4 text-sm">
-                      <span className="flex items-center">
-                      <Calendar size={16} className="mr-1" />
-                      {tournament.date}
-                      </span>
-                      <span className="flex items-center">
-                      <Users size={16} className="mr-1" />
-                      {tournament.participants} participants
-                      </span>
-                    </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                    <span className="text-lg font-bold text-yellow-500">{tournament.prize}</span>
-                    <button className="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-                      Voir le tournoi
-                    </button>
-                    </div>
-                  </div>
-                  </div>
-                ))}
-                </div>
-            )}
-
-            {activeTab === 'community' && (
-                <div className="space-y-4">
-                <h2 className="text-2xl font-bold mb-4">Discussions récentes</h2>
-                {game.discussions.map(discussion => (
-                  <div 
-                  key={discussion.id}
-                  onClick={() => navigate('/tchat')}
-                  className={`rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 shadow cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors`}
-                  >
-                  <h3 className="text-lg font-semibold mb-1">{discussion.title}</h3>
-                  <div className="flex flex-wrap items-center justify-between text-sm">
-                    <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
-                    Par {discussion.author}
-                    </span>
-                    <div className="flex space-x-4">
-                    <span className="flex items-center">
-                      <MessageSquare size={16} className="mr-1" />
-                      {discussion.replies} réponses
-                    </span>
-                    <span className="flex items-center">
-                      <Eye size={16} className="mr-1" />
-                      {discussion.views} vues
-                    </span>
-                    <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
-                      {discussion.lastActivity}
-                    </span>
-                    </div>
-                  </div>
-                  </div>
-                ))}
-                </div>
-            )}
           </div>
-
+          
           {/* Sidebar Column */}
           <div className="space-y-6">
             <div className={`rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 shadow`}>
@@ -387,15 +263,12 @@ const GamePres: React.FC = () => {
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Joueurs actifs</h3>
                   <p className="text-2xl font-bold">1.2M</p>
                 </div>
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Temps de jeu moyen</h3>
-                  <p className="text-2xl font-bold">4.7h</p>
-                </div>
+
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Note communautaire</h3>
                   <div className="flex items-center">
                     <Star size={20} className="text-yellow-500 mr-1" />
-                    <span className="text-2xl font-bold">{game.rating}/5</span>
+                    <span className="text-2xl font-bold">{game.rating}/10</span>
                   </div>
                 </div>
               </div>
@@ -406,7 +279,7 @@ const GamePres: React.FC = () => {
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200">
                   <img 
-                    src="https://i.pinimg.com/736x/af/e9/ca/afe9caf7daea0349e5e1a2104b3d9852.jpg" 
+                    src="https://i.pinimg.com/736x/7e/35/59/7e355945a50146d2e8cecd38926c6625.jpg" 
                     alt={game.developer} 
                     className="w-full h-full object-cover"
                   />
@@ -421,7 +294,7 @@ const GamePres: React.FC = () => {
             <div className={`rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 shadow`}>
               <h2 className="text-xl font-semibold mb-4">Tags</h2>
               <div className="flex flex-wrap gap-2">
-                {['FPS', 'Compétitif', 'Tactique', '5v5', 'Free-to-play'].map((tag, index) => (
+                {['Battle Royale', 'Légendes', 'Escouade', 'Ping System', 'Cross-Platform'].map((tag, index) => (
                   <span 
                     key={index}
                     className={`px-3 py-1 rounded-full text-sm ${

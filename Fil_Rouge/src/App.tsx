@@ -6,7 +6,13 @@ import GameForum from './pages/GameForum';
 import TasksPage from './pages/TasksPage';
 import TrendsPage from './pages/TrendsPage';
 import GamesPage from './pages/GamePage';
-import GamePres from './pages/GamePres';
+import GamePresVal from './pages/GamePageDir/GamePresVal';
+import GamePresLoL from './pages/GamePageDir/GamePresLoL';
+import GamePresAL from './pages/GamePageDir/GamePresAL';
+import GamePresCS2 from './pages/GamePageDir/GamePresCS2';
+import GamePresFor from './pages/GamePageDir/GamePresFor';
+import GamePresOW2 from './pages/GamePageDir/GamePresOW2';
+
 import CompetitionPage from './pages/CompetitionPage';
 import CompetitionPres from './pages/CompetitionPres';
 import ProfilePage from './pages/ProfilePage';
@@ -32,7 +38,12 @@ function App() {
           <Route path="tasks" element={<TasksPage />} />
           <Route path="trends" element={<TrendsPage />} />
           <Route path="games" element={<GamesPage />} />
-          <Route path="presgame" element={<GamePres />} />
+          <Route path="gamepresval" element={<GamePresVal />} />
+          <Route path="gamepreslol" element={<GamePresLoL />} />
+          <Route path="gamepresal" element={<GamePresAL />} />
+          <Route path="gameprescs2" element={<GamePresCS2 />} />
+          <Route path="gamepresfor" element={<GamePresFor />} />
+          <Route path="gamepresow2" element={<GamePresOW2 />} />
           <Route path="discussions" element={<DiscussionsPage />} />
           <Route path="tchat" element={<ForumTchat />} />
           <Route path="competition" element={<CompetitionPage />} />
