@@ -60,15 +60,14 @@ node index.js
 ## Project Structure
 
 ```
-gameforum/
+Fil_Rouge/
+├── backend/
+│   ├── node_modules/   # Config
+│   └── prisma/         # BDD
 ├── src/
+│   ├── assets/         # Images
 │   ├── components/     # Reusable UI components
-│   ├── lib/           # Utilities and store
-│   ├── pages/         # Page components
-│   └── types/         # TypeScript type definitions
-├── public/            # Static assets
-├── supabase/          # Supabase configurations
-└── tests/            # Test files
+│   └──pages/           # Page components
 ```
 
 ## Features in Detail
