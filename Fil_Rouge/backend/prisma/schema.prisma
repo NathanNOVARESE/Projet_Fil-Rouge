@@ -38,6 +38,10 @@ model Forum {
 model Topic {
   id         Int      @id @default(autoincrement())
   title      String
+  content    String   // Ajouté
+  game       String   // Ajouté
+  category   String   // Ajouté
+  tags       String?  // Stocke les tags sous forme de texte JSON
   createdAt  DateTime @default(now())
   forumId    Int
   createdBy  Int

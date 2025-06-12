@@ -172,76 +172,6 @@ app.delete('/forums/:id', async (req, res) => {
   res.json({ message: 'Forum supprimé' });
 });
 
-// Topics
-app.get('/forums/:forumId/topics', async (req, res) => {
-  const { forumId } = req.params;
-  const topics = await prisma.topic.findMany({
-    where: { forumId },
-    include: { createdBy: true }
-  });
-  res.json(topics);
-});
-
-app.post('/forums/:forumId/topics', async (req, res) => {
-  const { forumId } = req.params;
-  const { title, createdById } = req.body;
-  const topic = await prisma.topic.create({
-    data: { title, forumId, createdById }
-  });
-  res.json(topic);
-});
-
-app.post('/api/topics', async (req, res) => {
-  const { title, forumId, createdBy } = req.body;
-  try {
-    const topic = await prisma.topic.create({
-      data: {
-        title,
-        forumId: Number(forumId),
-        createdBy: Number(createdBy)
-      }
-    });
-    res.status(201).json(topic);
-  } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la création du topic', details: err.message });
-  }
-});
-
-// Posts
-app.get('/topics/:topicId/posts', async (req, res) => {
-  const { topicId } = req.params;
-  const posts = await prisma.post.findMany({
-    where: { topicId },
-    include: { author: true }
-  });
-  res.json(posts);
-});
-
-app.post('/topics/:topicId/posts', async (req, res) => {
-  const { topicId } = req.params;
-  const { content, authorId } = req.body;
-  const post = await prisma.post.create({
-    data: { content, topicId, authorId }
-  });
-  res.json(post);
-});
-
-app.put('/posts/:id', async (req, res) => {
-  const { id } = req.params;
-  const { content } = req.body;
-  const post = await prisma.post.update({
-    where: { id },
-    data: { content }
-  });
-  res.json(post);
-});
-
-app.delete('/posts/:id', async (req, res) => {
-  const { id } = req.params;
-  await prisma.post.delete({ where: { id } });
-  res.json({ message: 'Post supprimé' });
-});
-
 // --- ROUTES UPLOAD ---
 const upload = multer({ dest: 'uploads/', limits: { fileSize: 5 * 1024 * 1024 } });
 
@@ -278,6 +208,39 @@ app.delete('/api/users/:id', async (req, res) => {
     res.json({ message: 'Utilisateur supprimé' });
   } catch (err) {
     res.status(400).json({ error: "Impossible de supprimer l'utilisateur" });
+  }
+});
+
+// Création d'une discussion
+app.post('/api/discussions', async (req, res) => {
+  console.log('BODY:', req.body);
+  let { title, content, game, category, tags, createdAt, forumId, createdBy } = req.body;
+  try {
+    forumId = Number(forumId);
+    createdBy = Number(createdBy);
+    tags = Array.isArray(tags) ? tags : [];
+
+    if (!title || !content || !game || !category || !forumId || !createdBy) {
+      return res.status(400).json({ error: "Champs obligatoires manquants" });
+    }
+
+    // NE PAS mettre de champ "topic" ici
+    const discussion = await prisma.post.create({
+      data: {
+        title,
+        content,
+        game,
+        category,
+        tags,
+        createdAt: createdAt ? new Date(createdAt) : new Date(),
+        forumId,
+        createdBy,
+      }
+    });
+    res.json(discussion);
+  } catch (error) {
+    console.error(error);
+    res.status(400).json({ error: "Erreur lors de la création de la discussion" });
   }
 });
 

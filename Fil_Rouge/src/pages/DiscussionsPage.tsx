@@ -44,6 +44,7 @@ const DiscussionsPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState('');
   const [selectedForumId, setSelectedForumId] = useState('1'); // Default to the first forum
+  const [selectedTopicId, setSelectedTopicId] = useState(''); // State for selected topic ID
 
   // Available tags for selection
   const availableTags: Tag[] = [
@@ -57,7 +58,7 @@ const DiscussionsPage: React.FC = () => {
   ];
 
   // Mock data for discussions
-  const discussions: Discussion[] = [
+  const [discussions, setDiscussions] = useState<Discussion[]>([
     {
       id: '1',
       title: "Guide des meilleures armes dans Valorant",
@@ -98,40 +99,11 @@ const DiscussionsPage: React.FC = () => {
         { id: '6', name: 'Classé', color: '#EC4899' }
       ]
     }
-  ];
+  ]);
 
   // List of games and categories for filtering
   const games = ["Valorant", "League of Legends", "CS2", "Fortnite", "Apex Legends"];
   const categories = ["Guides", "Discussion", "Question", "Actualités", "Recherche d'équipe"];
-
-  // Handle form submission for creating a new discussion
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const data = {
-      title,
-      forumId: Number(selectedForumId), // récupère l'id du forum sélectionné
-      createdBy: Number(user.id),       // récupère l'id de l'utilisateur connecté
-    };
-
-    try {
-      const response = await fetch('http://localhost:3001/api/topics', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (response.ok) {
-        setShowForm(false);
-        resetForm();
-        alert('Topic créé avec succès !');
-      } else {
-        alert('Erreur lors de la création du topic.');
-      }
-    } catch (error) {
-      alert('Erreur réseau.');
-    }
-  };
 
   // Reset the form fields
   const resetForm = () => {
@@ -197,6 +169,59 @@ const DiscussionsPage: React.FC = () => {
     );
   }
 
+  // Handle discussion creation
+  const handleCreateDiscussion = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Vérifie si le forum et l'utilisateur sont définis
+    if (!selectedForumId || !user?.id) {
+      alert("Forum ou utilisateur non défini !");
+      return;
+    }
+
+    // Prépare l'objet à envoyer selon la structure de ta base
+    const newDiscussion = {
+      title,
+      content,
+      game: selectedGame,
+      category: selectedCategory,
+      tags: selectedTags.map(tag => tag.name),
+      createdAt: new Date().toISOString(),
+      forumId: Number(selectedForumId),
+      createdBy: Number(user?.id),
+    };
+
+    try {
+      const response = await fetch('/api/discussions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDiscussion)
+      });
+      if (!response.ok) throw new Error('Erreur lors de la création');
+      const savedDiscussion = await response.json();
+
+      // Ajoute la discussion sauvegardée à l'état local pour affichage immédiat
+      setDiscussions([
+        {
+          ...savedDiscussion,
+          author: {
+            name: user?.username || "Anonyme",
+            avatar: user?.avatar || "https://thispersondoesnotexist.com/"
+          },
+          views: 0,
+          likes: 0,
+          replies: 0,
+          tags: selectedTags, // Pour l'affichage local
+        },
+        ...discussions
+      ]);
+      resetForm();
+      setShowForm(false);
+    } catch (error) {
+      alert('Erreur lors de la création de la discussion');
+    }
+  };
+
   return (
     <div className={`p-4 md:p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
       {/* Header section */}
@@ -226,7 +251,7 @@ const DiscussionsPage: React.FC = () => {
       {showForm && (
         <div className={`mb-6 p-4 md:p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
           <h2 className="text-lg md:text-xl font-semibold mb-4">Créer une nouvelle discussion</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleCreateDiscussion} className="space-y-4">
             {/* Title input */}
             <div>
               <label className="block text-sm font-medium mb-1">Titre</label>
