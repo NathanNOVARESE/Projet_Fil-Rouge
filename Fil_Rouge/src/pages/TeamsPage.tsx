@@ -17,16 +17,16 @@ const TeamsPage: React.FC = () => {
         },
       id: 1,
       name: 'Team Vitality',
-      logo: '',
+      logo: 'https://i.pinimg.com/736x/d3/47/23/d347231141e704770726952940fc17c6.jpg',
       game: 'Counter-Strike 2',
       region: 'Europe',
       established: 2013,
-      players: [
-        { name: 'ZywOo', nationality: 'FR' },
-        { name: 'ropz', nationality: 'IL' },
-        { name: 'mezii',  nationality: 'IL' },
+      players: [        
         { name: 'apEX',  nationality: 'FR' },
-        { name: 'flameZ', nationality: 'DK' }
+        { name: 'ZywOo', nationality: 'FR' },
+        { name: 'ropz', nationality: 'ES' },
+        { name: 'mezii',  nationality: 'UK' },
+        { name: 'flameZ', nationality: 'IS' }
       ],
       socials: {
         twitter: 'https://twitter.com/TeamVitality',
@@ -103,7 +103,11 @@ const TeamsPage: React.FC = () => {
             >
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
-                  <span className="text-xs text-gray-500 dark:text-gray-300">Logo</span>
+                  <img
+                    src={team.logo}
+                    alt={`${team.name} logo`}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
                 </div>
                 <div>
                   <h2 className="text-xl font-bold">{team.name}</h2>
@@ -170,7 +174,7 @@ const TeamsPage: React.FC = () => {
                     Joueurs
                   </h3>
                   <ul className="space-y-2">
-                    {team.players.slice(0, 3).map((player, i) => (
+                    {team.players.slice(0, 5).map((player, i) => (
                       <li key={i} className="flex justify-between items-center">
                         <div className="flex items-center">
                           <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2 ${
@@ -187,9 +191,6 @@ const TeamsPage: React.FC = () => {
                         </span>
                       </li>
                     ))}
-                    <li className="text-sm text-gray-500 dark:text-gray-400">
-                      + {team.players.length - 3} autres joueurs...
-                    </li>
                   </ul>
                 </div>
 
