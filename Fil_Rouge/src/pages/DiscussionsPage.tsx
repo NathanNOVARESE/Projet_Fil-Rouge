@@ -225,7 +225,13 @@ const DiscussionsPage: React.FC = () => {
           Discussions
         </h1>
         <button
-          onClick={() => setShowForm(!showForm)}
+          onClick={() => {
+            if (!user) {
+              navigate('/login');
+            } else {
+              setShowForm(!showForm);
+            }
+          }}
           className="flex items-center justify-center w-full md:w-auto px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
         >
           {showForm ? (
@@ -474,14 +480,26 @@ const DiscussionsPage: React.FC = () => {
         {filteredDiscussions.map((discussion) => (
           <div
             key={discussion.id}
-            onClick={() => navigate(`/tchat/${discussion.id}`)}
+            onClick={() => {
+              if (!user) {
+                navigate('/login');
+              } else {
+                navigate(`/tchat/${discussion.id}`);
+              }
+            }}
             role="button"
             tabIndex={0}
             className={`w-full text-left ${
               darkMode ? 'bg-gray-800' : 'bg-white'
             } rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg cursor-pointer`}
             onKeyDown={e => {
-              if (e.key === 'Enter' || e.key === ' ') navigate(`/tchat/${discussion.id}`);
+              if (e.key === 'Enter' || e.key === ' ') {
+                if (!user) {
+                  navigate('/login');
+                } else {
+                  navigate(`/tchat/${discussion.id}`);
+                }
+              }
             }}
           >
             <div className="flex items-start space-x-4">
