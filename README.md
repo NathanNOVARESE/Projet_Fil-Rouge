@@ -38,8 +38,8 @@ A modern, feature-rich gaming community platform built with React, TypeScript, a
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/gameforum.git
-cd gameforum
+git clone https://github.com/NathanNOVARESE/Projet_Fil-Rouge
+cd /Fil_Rouge/
 ```
 
 2. Install dependencies:
@@ -47,23 +47,27 @@ cd gameforum
 npm install
 ```
 
-3. Start the development server:
+3.1 Start the development server:
 ```bash
 npm run dev
+```
+3.2 Run the back-end
+
+```bash
+node index.js
 ```
 
 ## Project Structure
 
 ```
-gameforum/
+Fil_Rouge/
+├── backend/
+│   ├── node_modules/   # Config
+│   └── prisma/         # BDD
 ├── src/
+│   ├── assets/         # Images
 │   ├── components/     # Reusable UI components
-│   ├── lib/           # Utilities and store
-│   ├── pages/         # Page components
-│   └── types/         # TypeScript type definitions
-├── public/            # Static assets
-├── supabase/          # Supabase configurations
-└── tests/            # Test files
+│   └──pages/           # Page components
 ```
 
 ## Features in Detail
@@ -81,15 +85,11 @@ gameforum/
 
 ### Gaming Section
 - Game listings
-- Tournament organization
-- Player statistics
-- Team management
+- Team management (coming soon)
 
 ### Profile System
 - User profiles
-- Gaming history
-- Achievement tracking
-- Social connections
+- Modifications
 
 ## Acknowledgments
 

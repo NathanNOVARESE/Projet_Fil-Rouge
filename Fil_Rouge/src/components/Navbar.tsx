@@ -1,108 +1,116 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useStore } from '../lib/store';
-import { Moon, Sun, Bell, User, LogOut, Menu } from 'lucide-react';
-import { Joystick, Search } from 'lucide-react';
+import { Moon, Sun, User, LogOut } from 'lucide-react';
+import { Joystick } from 'lucide-react';
 
 const Navbar: React.FC = () => {
-  const { user, darkMode, toggleDarkMode, setUser } = useStore();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // État pour la Sidebar mobile
+  const { user, setUser, darkMode, toggleDarkMode } = useStore();
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const handleLogout = () => {
-    setUser(null);
-  };
+if (user && user.email !== 'demo@example.com') {
+  console.log('user in Navbar:', user);
+}
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dropdownOpen]);
 
   return (
-    <>
-      {/* Navbar */}
-      <nav
-        className={`px-4 py-3 ${
-          darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
-        } shadow-md sticky top-0 z-10`}
-      >
-        <div className="container mx-auto flex justify-between items-center">
-          <Link
-            to="/"
-            className="text-xl font-bold flex items-center space-x-0.2 ml-6"
+    <nav
+      className={`px-4 py-3 ${
+        darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
+      } shadow-md sticky top-0 z-10`}
+    >
+      <div className="container mx-auto flex justify-between items-center">
+        <Link
+          to="/"
+          className="text-xl font-bold flex items-center space-x-0.5 ml-6"
+        >
+          <Joystick size={30} />
+          <span className="text-blue-500">Game</span>
+          <span>Forum</span>
+        </Link>
+
+        <div className="hidden md:flex space-x-4 w-full max-w-md">
+        </div>
+
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
           >
-            <Joystick size={30} />
-            <span className="text-blue-500">Game</span>
-            <span>Forum</span>
-          </Link>
+            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
 
-          <div className="hidden md:flex space-x-4 w-full max-w-md">
-            <div className="relative flex-grow">
-              <input
-                type="text"
-                placeholder="Search..."
-                className="w-full px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400"
-                aria-label="Search"
+          <div className="relative">
+            <button
+              className="p-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 flex items-center justify-center"
+              onClick={() => setDropdownOpen((open) => !open)}
+              aria-label="Profil"
+            >
+              {user && user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="Profil"
+                  className="w-8 h-8 rounded-full object-cover border-2 border-blue-400"
+                />
+              ) : (
+                <User size={20} />
+              )}
+            </button>
+            {dropdownOpen && (
+              <div
+                ref={dropdownRef}
+                id="profile-dropdown"
+                className="absolute right-[-40%] mt-2 w-48 bg-white dark:bg-gray-800 rounded shadow-lg py-2 z-20"
               >
-                <Search size={20} />
-              </button>
-            </div>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={toggleDarkMode}
-              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label={
-                darkMode ? 'Switch to light mode' : 'Switch to dark mode'
-              }
-            >
-              {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
-
-            <button
-              className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-              aria-label="Notifications"
-            >
-              <Bell size={20} />
-            </button>
-
-            {user ? (
-              <div className="flex items-center space-x-2">
-                <div className="hidden md:block"></div>
-                <div className="relative">
-                  <button
-                    className="p-2 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300"
-                    onClick={() => {
-                      const dropdown = document.getElementById(
-                        'profile-dropdown'
-                      );
-                      if (dropdown) {
-                        dropdown.style.display =
-                          dropdown.style.display === 'block' ? 'none' : 'block';
-                      }
-                    }}
-                  >
-                    <User size={20} />
-                  </button>
-                  <div
-                    id="profile-dropdown"
-                    className="absolute right-[-40%] mt-2 w-48 bg-white dark:bg-gray-800 rounded shadow-lg py-2 z-20 hidden"
-                  >
+                {!user ? (
+                  <>
+                    <Link
+                      to="/login"
+                      className="block px-4 py-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-md"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      Se connecter
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="block px-4 py-2 text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded-md"
+                      onClick={() => setDropdownOpen(false)}
+                    >
+                      S'inscrire
+                    </Link>
+                  </>
+                ) : (
+                  <>
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
+                      onClick={() => setDropdownOpen(false)}
                     >
-                      Profile
-                    </Link>
-                    <Link
-                      to="/settings"
-                      className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      Settings
+                      Profil
                     </Link>
                     <button
-                      onClick={handleLogout}
+                      onClick={() => {
+                        setUser(null);
+                        localStorage.removeItem('token');
+                        setDropdownOpen(false);
+                        window.location.reload();
+                      }}
                       className="w-full text-left block px-4 py-2 text-gray-800 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700"
                     >
                       <div className="flex items-center">
@@ -110,30 +118,17 @@ const Navbar: React.FC = () => {
                         <span>Logout</span>
                       </div>
                     </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Link
-                  to="/login"
-                  className="px-4 py-2 rounded text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors"
-                >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition-colors"
-                >
-                  Sign Up
-                </Link>
+                  </>
+                )}
               </div>
             )}
           </div>
         </div>
-      </nav>
-    </>
+      </div>
+    </nav>
   );
 };
 
 export default Navbar;
+
+

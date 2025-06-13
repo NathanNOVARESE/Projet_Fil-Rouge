@@ -4,10 +4,9 @@ import { Calendar, Users, Award, Clock, MapPin, Twitch, Youtube, ChevronLeft} fr
 import { useNavigate } from 'react-router-dom';
 
 const CompetitionPres: React.FC = () => {
-  const { darkMode } = useStore(); // Access the dark mode state from the store
-  const navigate = useNavigate(); // Hook for navigation
+  const { darkMode } = useStore();
+  const navigate = useNavigate();
 
-  // Mock data for a specific tournament
   const tournament = {
     id: 1,
     name: 'Championnat du Monde CS2',
@@ -44,9 +43,7 @@ const CompetitionPres: React.FC = () => {
 
   return (
     <div className={`min-h-screen rounded-md ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Hero Section */}
       <div className="relative">
-        {/* Background image with tournament name and game */}
         <div className="h-64 w-full bg-cover bg-center text-white " style={{ backgroundImage: `url(${tournament.coverImage})` }}>
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
@@ -56,22 +53,16 @@ const CompetitionPres: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
-        {/* Back Button */}
         <button
-          onClick={() => navigate(-1)} // Navigate back to the previous page
+          onClick={() => navigate(-1)}
           className="flex items-center text-blue-500 hover:text-blue-600 transition-colors mb-6"
         >
           <ChevronLeft size={20} className="mr-2" />
           Retour
         </button>
-
-        {/* Tournament Details */}
         <div className={`rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} p-6 shadow`}>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            {/* Prize Pool */}
             <div className="flex items-center">
               <Award size={20} className="mr-2 text-yellow-500" />
               <div>
@@ -79,7 +70,6 @@ const CompetitionPres: React.FC = () => {
                 <p className="font-semibold">{tournament.prizePool}</p>
               </div>
             </div>
-            {/* Date */}
             <div className="flex items-center">
               <Calendar size={20} className="mr-2 text-blue-500" />
               <div>
@@ -87,7 +77,6 @@ const CompetitionPres: React.FC = () => {
                 <p className="font-semibold">{tournament.startDate} - {tournament.endDate}</p>
               </div>
             </div>
-            {/* Location */}
             <div className="flex items-center">
               <MapPin size={20} className="mr-2 text-red-500" />
               <div>
@@ -95,7 +84,6 @@ const CompetitionPres: React.FC = () => {
                 <p className="font-semibold">{tournament.location}</p>
               </div>
             </div>
-            {/* Participants */}
             <div className="flex items-center">
               <Users size={20} className="mr-2 text-green-500" />
               <div>
@@ -104,13 +92,8 @@ const CompetitionPres: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Tournament Description */}
           <p className="mb-6">{tournament.description}</p>
-
-          {/* Rules and Schedule */}
           <div className="grid grid-cols-1 md:grid-cols-2 ">
-            {/* Rules */}
             <div>
               <h4 className="font-semibold mb-3">Règles</h4>
               <ul className="space-y-2">
@@ -122,8 +105,6 @@ const CompetitionPres: React.FC = () => {
                 ))}
               </ul>
             </div>
-
-            {/* Schedule */}
             <div className="mt-8 md:mt-0 border-l-4 pl-6 border-solid border-gray-300 dark:border-gray-600">
               <h4 className="font-semibold mb-3">Programme</h4>
               <div className="space-y-4">
@@ -143,15 +124,13 @@ const CompetitionPres: React.FC = () => {
               </div>
             </div>
           </div>
-
-          {/* Streams */}
           <div className="mt-8">
             <h4 className="font-semibold mb-3">Streams Officiels</h4>
             <div className="flex flex-wrap gap-3">
               {tournament.streams.map((stream, index) => (
                 <a
                   key={index}
-                  href={stream.url} // Link to the stream
+                  href={stream.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={`px-4 py-2 rounded-lg flex items-center ${

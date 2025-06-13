@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore, Task, Tag } from '../lib/store';
-import { Calendar, Tag as TagIcon, CheckCircle, Circle, Trash, Edit, Flag } from 'lucide-react';
+import { Calendar, CheckCircle, Circle, Trash, Edit, Flag } from 'lucide-react';
 
 interface TaskCardProps {
   task: Task;
@@ -33,7 +33,7 @@ const TagBadge: React.FC<{ tag: Tag }> = ({ tag }) => {
     <span 
       className="text-xs px-2 py-1 rounded-full flex items-center mr-1 mb-1"
       style={{ 
-        backgroundColor: `${tag.color}20`, // Using hex with alpha
+        backgroundColor: `${tag.color}20`, 
         color: tag.color, 
       }}
     >

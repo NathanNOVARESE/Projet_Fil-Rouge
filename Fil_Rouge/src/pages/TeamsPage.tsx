@@ -1,408 +1,264 @@
-import React, { useState } from 'react';
-import { useStore } from '../lib/store';
-import { Users, Trophy, Calendar, Search, ChevronDown, ChevronUp, Twitter, Instagram, Globe } from 'lucide-react';
+import React, { useState} from 'react';
+import { useStore, Task } from '../lib/store';
+import TaskCard from '../components/TaskCard';
+import TaskForm from '../components/TaskForm';
+import { Plus, X, Filter, Search, ListTodo } from 'lucide-react';
 
-const TeamsPage: React.FC = () => {
-  const { darkMode } = useStore();
-  const [expandedTeam, setExpandedTeam] = useState<number | null>(null);
+const TasksPage: React.FC = () => {
+  const { tasks, user, darkMode, addTask, updateTask } = useStore();
+  const [showForm, setShowForm] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterGame, setFilterGame] = useState('ALL');
-  const [filterRegion, setFilterRegion] = useState('ALL');
+  const [filterPriority, setFilterPriority] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [showFilters, setShowFilters] = useState(false);
 
-  // Mock data for teams
-  const teams = [
-    {
-      media: {
-          coverImage: 'https://img.freepik.com/photos-gratuite/amis-vue-cote-gagnant-jeu-video_23-2149349984.jpg?semt=ais_hybrid&w=740',
-        },
-        
-
-
-      id: 1,
-      name: 'Team Vitality',
-      logo: '',
-      game: 'Counter-Strike 2',
-      region: 'Europe',
-      established: 2013,
-      players: [
-        { name: 'ZywOo', role: 'AWPer', nationality: 'FR' },
-        { name: 'Spinx', role: 'Rifler', nationality: 'IL' },
-        { name: 'flameZ', role: 'Rifler', nationality: 'IL' },
-        { name: 'apEX', role: 'IGL', nationality: 'FR' },
-        { name: 'Magisk', role: 'Support', nationality: 'DK' }
-      ],
-      achievements: [
-        { title: 'Major Paris 2023', year: 2023 },
-        { title: 'IEM Rio 2023', year: 2023 },
-        { title: 'EPL S17', year: 2023 }
-      ],
-      socials: {
-        twitter: 'https://twitter.com/TeamVitality',
-        instagram: 'https://instagram.com/TeamVitality',
-        website: 'https://vitality.gg'
-      },
-      upcomingMatches: [
-        { opponent: 'FaZe Clan', date: '15/11/2023', event: 'BLAST Premier' },
-        { opponent: 'G2 Esports', date: '18/11/2023', event: 'IEM Cologne' }
-      ],
-      stats: {
-        winRate: '72%',
-        recentForm: ['W', 'W', 'L', 'W', 'W'],
-        worldRanking: 1
-      }
-    },
-    {
-      id: 2,
-      name: 'T1',
-      logo: '',
-      game: 'League of Legends',
-      region: 'Korea',
-      established: 2002,
-      players: [
-        { name: 'Faker', role: 'Mid', nationality: 'KR' },
-        { name: 'Zeus', role: 'Top', nationality: 'KR' },
-        { name: 'Oner', role: 'Jungle', nationality: 'KR' },
-        { name: 'Gumayusi', role: 'ADC', nationality: 'KR' },
-        { name: 'Keria', role: 'Support', nationality: 'KR' }
-      ],
-      achievements: [
-        { title: 'Worlds 2023', year: 2023 },
-        { title: 'LCK Summer 2023', year: 2023 },
-        { title: 'MSI 2022', year: 2022 }
-      ],
-      socials: {
-        twitter: 'https://twitter.com/T1LoL',
-        instagram: 'https://instagram.com/T1',
-        website: 'https://t1.gg'
-      },
-      upcomingMatches: [
-        { opponent: 'Gen.G', date: '20/11/2023', event: 'LCK Finals' },
-        { opponent: 'DRX', date: '25/11/2023', event: 'KeSPA Cup' }
-      ],
-      stats: {
-        winRate: '68%',
-        recentForm: ['W', 'L', 'W', 'W', 'W'],
-        worldRanking: 2
-      }
-    },
-    {
-      id: 3,
-      name: 'Team SoloMid',
-      logo: '',
-      game: 'Valorant',
-      region: 'North America',
-      established: 2009,
-      players: [
-        { name: 'Corey', role: 'Duelist', nationality: 'US' },
-        { name: 'gMd', role: 'Initiator', nationality: 'CA' },
-        { name: 'seven', role: 'Controller', nationality: 'US' },
-        { name: 'Rossy', role: 'Sentinel', nationality: 'US' },
-        { name: 'valyn', role: 'IGL', nationality: 'US' }
-      ],
-      achievements: [
-        { title: 'VCT NA 2023', year: 2023 },
-        { title: 'Champions Tour', year: 2022 }
-      ],
-      socials: {
-        twitter: 'https://twitter.com/TSM',
-        instagram: 'https://instagram.com/TSM',
-        website: 'https://tsm.gg'
-      },
-      upcomingMatches: [
-        { opponent: 'Sentinels', date: '12/11/2023', event: 'VCT Americas' },
-        { opponent: 'LOUD', date: '15/11/2023', event: 'VCT Playoffs' }
-      ],
-      stats: {
-        winRate: '65%',
-        recentForm: ['W', 'L', 'W', 'L', 'W'],
-        worldRanking: 5
-      }
-    }
-  ];
-
-  const games = ['ALL', 'Counter-Strike 2', 'League of Legends', 'Valorant', 'Fortnite', 'Dota 2'];
-  const regions = ['ALL', 'Europe', 'North America', 'Korea', 'China', 'Brazil', 'Japan'];
-
-  const filteredTeams = teams.filter(team => {
-    return (
-      (searchTerm === '' || team.name.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (filterGame === 'ALL' || team.game === filterGame) &&
-      (filterRegion === 'ALL' || team.region === filterRegion)
-    );
-  });
-
-  const toggleTeam = (id: number) => {
-    setExpandedTeam(expandedTeam === id ? null : id);
+  const handleCreateTask = (taskData: Omit<Task, 'id'>) => {
+    const newTask = {
+      ...taskData,
+      id: Date.now().toString(),
+    } as Task;
+    addTask(newTask);
+    setShowForm(false);
   };
 
+  const handleEditTask = (task: Task) => {
+    setEditingTask(task);
+    setShowForm(true);
+  };
+
+  const handleUpdateTask = (taskData: Omit<Task, 'id'>) => {
+    if (!editingTask) return;
+    const updatedTask = {
+      ...taskData,
+      id: editingTask.id,
+    } as Task;
+    updateTask(updatedTask);
+    setEditingTask(null);
+    setShowForm(false);
+  };
+
+  const handleCancelForm = () => {
+    setShowForm(false);
+    setEditingTask(null);
+  };
+
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterPriority('ALL');
+    setFilterStatus('ALL');
+  };
+
+  const filteredTasks = tasks.filter(task => {
+    if (searchTerm && !task.title.toLowerCase().includes(searchTerm.toLowerCase())) {
+      return false;
+    }
+    if (filterPriority !== 'ALL' && task.priority !== filterPriority) {
+      return false;
+    }
+    if (filterStatus === 'COMPLETED' && !task.completed) {
+      return false;
+    }
+    if (filterStatus === 'ACTIVE' && task.completed) {
+      return false;
+    }
+    return true;
+  });
+
+  if (!user) {
+    return (
+      <div className="text-center py-10">
+        <h1 className="text-2xl font-bold mb-4">Tasks</h1>
+        <p className="mb-6">Please log in to view and manage your tasks.</p>
+        <a 
+          href="/login" 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          Log In
+        </a>
+      </div>
+    );
+  }
+
   return (
-    <div className={`min-h-screen rounded-md ${darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
-      {/* Hero Section */}
-      <div className="relative">
-        <div className="h-64 w-full bg-gradient-to-r from-purple-600 to-blue-600 relative">
-          <img 
-            src={teams[0]?.media?.coverImage || ''} 
-            alt="Cover Image" 
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h1 className="text-4xl font-bold mb-4">Équipes Esport</h1>
-              <p className="text-xl">Découvrez les meilleures équipes professionnelles</p>
-            </div>
-          </div>
-        </div>
+    <div>
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <h1 className="text-2xl font-bold mb-4 md:mb-0">Tasks</h1>
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          {showForm ? (
+            <>
+              <X size={16} className="mr-2" />
+              Cancel
+            </>
+          ) : (
+            <>
+              <Plus size={16} className="mr-2" />
+              Add Task
+            </>
+          )}
+        </button>
       </div>
 
-      {/* Main Content */}
-      <div className="container mx-auto px-4 py-8">
-        {/* Filters */}
-        <div className={`rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} p-4 shadow mb-6`}>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Rechercher</label>
-              <div className="relative">
-                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Nom d'équipe..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full pl-10 pr-3 py-2 rounded-md ${
-                    darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                  } border`}
-                />
-              </div>
+      {showForm && (
+        <div className={`mb-6 p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
+          <h2 className="text-xl font-semibold mb-4">
+            {editingTask ? 'Edit Task' : 'Create New Task'}
+          </h2>
+          <TaskForm
+            task={editingTask || undefined}
+            onSubmit={editingTask ? handleUpdateTask : handleCreateTask}
+            onCancel={handleCancelForm}
+          />
+        </div>
+      )}
+
+      <div className="mb-6">
+        <div className="flex flex-col md:flex-row md:items-center mb-4">
+          <div className="relative flex-grow mb-4 md:mb-0 md:mr-4">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={16} className="text-gray-400" />
             </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Jeu</label>
-              <select
-                value={filterGame}
-                onChange={(e) => setFilterGame(e.target.value)}
-                className={`w-full px-3 py-2 rounded-md ${
-                  darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                } border`}
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search tasks..."
+              className={`w-full pl-10 pr-3 py-2 rounded-md ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white' 
+                  : 'bg-white border-gray-300 text-gray-900'
+              } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                {games.map(game => (
-                  <option key={game} value={game}>{game}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Région</label>
-              <select
-                value={filterRegion}
-                onChange={(e) => setFilterRegion(e.target.value)}
-                className={`w-full px-3 py-2 rounded-md ${
-                  darkMode ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'
-                } border`}
-              >
-                {regions.map(region => (
-                  <option key={region} value={region}>{region}</option>
-                ))}
-              </select>
-            </div>
+                <X size={16} />
+              </button>
+            )}
           </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center px-3 py-2 rounded ${
+              showFilters 
+                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' 
+                : darkMode 
+                  ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            } transition-colors`}
+          >
+            <Filter size={16} className="mr-2" />
+            Filters
+            {(filterPriority !== 'ALL' || filterStatus !== 'ALL') && (
+              <span className="ml-2 w-2 h-2 bg-blue-500 rounded-full"></span>
+            )}
+          </button>
         </div>
 
-        {/* Teams List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTeams.map(team => (
-            <div 
-              key={team.id}
-              className={`rounded-lg overflow-hidden shadow-lg transition-all duration-200 ${
-                darkMode ? 'bg-gray-800' : 'bg-white'
-              }`}
-            >
-              {/* Team Header */}
-              <div 
-                className="p-6 cursor-pointer"
-                onClick={() => toggleTeam(team.id)}
-              >
-                <div className="flex items-center space-x-4">
-                  <img 
-                    src={team.logo} 
-                    alt={team.name} 
-                    className="w-16 h-16 object-contain"
-                  />
-                  <div>
-                    <h2 className="text-xl font-bold">{team.name}</h2>
-                    <div className="flex flex-wrap items-center gap-2 mt-1">
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}>
-                        {team.game}
-                      </span>
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                      }`}>
-                        {team.region}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Team Stats */}
-              <div className="px-6 pb-4">
-                <div className="grid grid-cols-3 gap-2 text-center">
-                  <div className={`p-2 rounded ${
-                    darkMode ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Win Rate</p>
-                    <p className="font-semibold">{team.stats.winRate}</p>
-                  </div>
-                  <div className={`p-2 rounded ${
-                    darkMode ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Forme</p>
-                    <div className="flex justify-center space-x-1">
-                      {team.stats.recentForm.map((result, i) => (
-                        <span 
-                          key={i}
-                          className={`w-5 h-5 flex items-center justify-center rounded text-xs ${
-                            result === 'W' 
-                              ? 'bg-green-500 text-white' 
-                              : 'bg-red-500 text-white'
-                          }`}
-                        >
-                          {result}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div className={`p-2 rounded ${
-                    darkMode ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Classement</p>
-                    <p className="font-semibold">#{team.stats.worldRanking}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Expandable Content */}
-              {expandedTeam === team.id && (
-                <div className="px-6 pb-6 border-t border-gray-200 dark:border-gray-700">
-                  {/* Players */}
-                  <div className="mt-4">
-                    <h3 className="font-semibold mb-2 flex items-center">
-                      <Users size={18} className="mr-2" />
-                      Joueurs
-                    </h3>
-                    <ul className="space-y-2">
-                      {team.players.map((player, i) => (
-                        <li key={i} className="flex justify-between items-center">
-                          <div className="flex items-center">
-                            <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs mr-2 ${
-                              darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                            }`}>
-                              {player.nationality}
-                            </span>
-                            <span>{player.name}</span>
-                          </div>
-                          <span className={`px-2 py-1 rounded-full text-xs ${
-                            darkMode ? 'bg-gray-700' : 'bg-gray-200'
-                          }`}>
-                            {player.role}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Achievements */}
-                  <div className="mt-6">
-                    <h3 className="font-semibold mb-2 flex items-center">
-                      <Trophy size={18} className="mr-2" />
-                      Palmarès
-                    </h3>
-                    <ul className="space-y-2">
-                      {team.achievements.map((achievement, i) => (
-                        <li key={i} className="flex justify-between">
-                          <span>{achievement.title}</span>
-                          <span className="text-gray-500 dark:text-gray-400">{achievement.year}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Upcoming Matches */}
-                  <div className="mt-6">
-                    <h3 className="font-semibold mb-2 flex items-center">
-                      <Calendar size={18} className="mr-2" />
-                      Prochains matchs
-                    </h3>
-                    <ul className="space-y-2">
-                      {team.upcomingMatches.map((match, i) => (
-                        <li key={i} className="flex justify-between items-center">
-                          <div>
-                            <p>vs {match.opponent}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{match.event}</p>
-                          </div>
-                          <span className="text-gray-500 dark:text-gray-400">{match.date}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Socials */}
-                  <div className="mt-6 flex space-x-3">
-                    <a 
-                      href={team.socials.twitter} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={`p-2 rounded-full ${
-                        darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
-                      } transition-colors`}
-                    >
-                      <Twitter size={18} />
-                    </a>
-                    <a 
-                      href={team.socials.instagram} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={`p-2 rounded-full ${
-                        darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
-                      } transition-colors`}
-                    >
-                      <Instagram size={18} />
-                    </a>
-                    <a 
-                      href={team.socials.website} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className={`p-2 rounded-full ${
-                        darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'
-                      } transition-colors`}
-                    >
-                      <Globe size={18} />
-                    </a>
-                  </div>
-                </div>
-              )}
-
-              {/* Toggle Button */}
-              <div className="px-6 pb-4">
-                <button
-                  onClick={() => toggleTeam(team.id)}
-                  className={`w-full py-2 rounded-b-lg flex items-center justify-center ${
-                    darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200'
-                  } transition-colors`}
+        {showFilters && (
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} mb-4`}>
+            <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Priority
+                </label>
+                <select
+                  value={filterPriority}
+                  onChange={(e) => setFilterPriority(e.target.value)}
+                  className={`px-3 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
                 >
-                  {expandedTeam === team.id ? (
-                    <ChevronUp size={18} className="mr-1" />
-                  ) : (
-                    <ChevronDown size={18} className="mr-1" />
-                  )}
-                  {expandedTeam === team.id ? 'Réduire' : 'Voir plus'}
+                  <option value="ALL">All Priorities</option>
+                  <option value="HIGH">High</option>
+                  <option value="MEDIUM">Medium</option>
+                  <option value="LOW">Low</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  Status
+                </label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className={`px-3 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="ALL">All Tasks</option>
+                  <option value="ACTIVE">Active</option>
+                  <option value="COMPLETED">Completed</option>
+                </select>
+              </div>
+              <div className="md:self-end">
+                <button
+                  onClick={clearFilters}
+                  className={`px-3 py-2 rounded ${
+                    darkMode 
+                      ? 'text-gray-300 hover:text-white' 
+                      : 'text-gray-700 hover:text-gray-900'
+                  }`}
+                >
+                  Clear Filters
                 </button>
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      {filteredTasks.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTasks.map((task) => (
+            <TaskCard key={task.id} task={task} onEdit={handleEditTask} />
           ))}
         </div>
-      </div>
+      ) : (
+        <div className={`text-center py-12 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
+          <div className="text-gray-400 mb-4">
+            {tasks.length > 0 ? (
+              <Filter size={48} className="mx-auto" />
+            ) : (
+              <ListTodo size={48} className="mx-auto" />
+            )}
+          </div>
+          <h3 className="text-xl font-medium mb-2">
+            {tasks.length > 0 ? "No matching tasks found" : "No tasks yet"}
+          </h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            {tasks.length > 0 
+              ? "Try changing your search or filters to find what you're looking for."
+              : "Create your first task to get started with managing your work."
+            }
+          </p>
+          {tasks.length > 0 ? (
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Clear Filters
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowForm(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+            >
+              Create Task
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };
 
-export default TeamsPage;
+export default TasksPage;

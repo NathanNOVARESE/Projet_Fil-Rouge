@@ -3,85 +3,64 @@ import { useNavigate } from 'react-router-dom';
 import { useStore } from '../lib/store';
 import { Eye, EyeOff } from 'lucide-react';
 
-// Define the type for authentication mode (login or register)
 type AuthMode = 'login' | 'register';
 
-// Main component for the authentication page
 const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
-  const navigate = useNavigate(); // Hook for navigation between pages
-  const { setUser, darkMode } = useStore(); // Retrieve global store functions and states
-  const [email, setEmail] = useState(''); // State for the email input
-  const [password, setPassword] = useState(''); // State for the password input
-  const [name, setName] = useState(''); // State for the name input (used only for registration)
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
-  const [loading, setLoading] = useState(false); // State to indicate if an action is in progress
-  const [error, setError] = useState<string | null>(null); // State to display errors
+  const navigate = useNavigate();
+  const { setUser, darkMode } = useStore();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Function to handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // Prevent page reload
-    setLoading(true); // Enable loading state
-    setError(null); // Reset errors
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
-      // Simulate an API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      let response, data;
       if (mode === 'register') {
-        // Validate email
-        if (!email.includes('@')) {
-          throw new Error('Please enter a valid email address');
-        }
-
-        // Validate password length
-        if (password.length < 6) {
-          throw new Error('Password must be at least 6 characters long');
-        }
-
-        // Simulate user registration
-        const newUser = {
-          id: `user-${Date.now()}`,
-          email,
-          name: name || email.split('@')[0], // Use the name or the part before '@' in the email
-        };
-
-        setUser(newUser); // Update the user in the global store
-        navigate('/'); // Redirect to the home page
+        response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: name || email.split('@')[0], email, password }),
+        });
       } else {
-        // Simulate user login
-        const mockUser = {
-          id: `user-${Date.now()}`,
-          email,
-          name: email.split('@')[0],
-        };
-
-        setUser(mockUser); // Update the user in the global store
-        navigate('/'); // Redirect to the home page
+        response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
       }
+
+      const isJson = response.headers.get('content-type')?.includes('application/json');
+      data = isJson ? await response.json() : {};
+      if (!response.ok) throw new Error(data.error || (mode === 'register' ? 'Registration failed' : 'Login failed'));
+
+      setUser(data.user);
+      if (data.token) localStorage.setItem('token', data.token);
+      navigate('/');
     } catch (err: any) {
-      // Handle errors
       setError(err.message || 'An error occurred. Please try again.');
     } finally {
-      setLoading(false); // Disable loading state
+      setLoading(false);
     }
   };
 
-  // Function to toggle password visibility
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
 
   return (
-    // Main container with responsive design and background
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-cover bg-center bg-[url(./assets/bg-white-2.jpg)]">
-      {/* Card containing the form */}
       <div className={`max-w-md w-full space-y-8 p-8 rounded-lg shadow-md ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
         <div>
-          {/* Page title */}
           <h2 className="mt-6 text-center text-3xl font-extrabold">
             {mode === 'login' ? 'Sign in to your account' : 'Create a new account'}
           </h2>
-          {/* Link to switch between login and registration */}
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             {mode === 'login' ? (
               <>
@@ -100,11 +79,8 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
             )}
           </p>
         </div>
-
-        {/* Form */}
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
-            {/* Name field (only for registration) */}
             {mode === 'register' && (
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -125,8 +101,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 />
               </div>
             )}
-
-            {/* Email field */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Email address
@@ -147,8 +121,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 placeholder="Email address"
               />
             </div>
-
-            {/* Password field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Password
@@ -169,7 +141,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                   } rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                   placeholder="Password"
                 />
-                {/* Button to toggle password visibility */}
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -178,7 +149,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {/* Link to reset password (only for login) */}
               {mode === 'login' && (
                 <div className="text-right mt-1">
                   <a href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400">
@@ -188,15 +158,11 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               )}
             </div>
           </div>
-
-          {/* Error message */}
           {error && (
             <div className="bg-red-100 dark:bg-red-900/30 border border-red-400 text-red-700 dark:text-red-400 px-4 py-3 rounded relative" role="alert">
               <span className="block sm:inline">{error}</span>
             </div>
           )}
-
-          {/* Submit button */}
           <div>
             <button
               type="submit"

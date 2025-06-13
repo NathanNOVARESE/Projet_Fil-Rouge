@@ -1,12 +1,17 @@
-import React, { useEffect } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 import AdminDashboard from './pages/AdminDashboard';
 import GameForum from './pages/GameForum';
 import TasksPage from './pages/TasksPage';
 import TrendsPage from './pages/TrendsPage';
 import GamesPage from './pages/GamePage';
-import GamePres from './pages/GamePres';
+import GamePresVal from './pages/GamePageDir/GamePresVal';
+import GamePresLoL from './pages/GamePageDir/GamePresLoL';
+import GamePresAL from './pages/GamePageDir/GamePresAL';
+import GamePresCS2 from './pages/GamePageDir/GamePresCS2';
+import GamePresFor from './pages/GamePageDir/GamePresFor';
+import GamePresOW2 from './pages/GamePageDir/GamePresOW2';
+
 import CompetitionPage from './pages/CompetitionPage';
 import CompetitionPres from './pages/CompetitionPres';
 import ProfilePage from './pages/ProfilePage';
@@ -18,21 +23,7 @@ import ForumTchat from './pages/ForumTchat';
 import { useStore } from './lib/store';
 
 function App() {
-  const { darkMode, user, setUser } = useStore();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Simulate authenticated user for demo purposes
-  useEffect(() => {
-    if (!user && !location.pathname.includes('/login') && !location.pathname.includes('/register')) {
-      // Set demo user for easy testing
-      setUser({
-        id: 'user-123',
-        email: 'demo@example.com',
-        name: 'Demo User',
-      });
-    }
-  }, [user, location.pathname, setUser]);
+  const { darkMode } = useStore();
 
   return (
     <div className={darkMode ? 'dark' : ''}>
@@ -45,9 +36,14 @@ function App() {
           <Route path="tasks" element={<TasksPage />} />
           <Route path="trends" element={<TrendsPage />} />
           <Route path="games" element={<GamesPage />} />
-          <Route path="presgame" element={<GamePres />} />
+          <Route path="gamepresval" element={<GamePresVal />} />
+          <Route path="gamepreslol" element={<GamePresLoL />} />
+          <Route path="gamepresal" element={<GamePresAL />} />
+          <Route path="gameprescs2" element={<GamePresCS2 />} />
+          <Route path="gamepresfor" element={<GamePresFor />} />
+          <Route path="gamepresow2" element={<GamePresOW2 />} />
           <Route path="discussions" element={<DiscussionsPage />} />
-          <Route path="tchat" element={<ForumTchat />} />
+          <Route path="/tchat/:id" element={<ForumTchat />} />
           <Route path="competition" element={<CompetitionPage />} />
           <Route path="prescomp" element={<CompetitionPres />} />
           <Route path="teams" element={<TeamsPage/>} />

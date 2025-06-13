@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStore } from '../lib/store';
-import { MessageSquare, Search, Plus, X, Filter, ThumbsUp, Eye, Clock, Tag as TagIcon, Send } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // Hook for navigation
+import { MessageSquare, Search, Plus, X, Filter, ThumbsUp, Clock, Tag as TagIcon, Send } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
-// Define interfaces for tags and discussions
 interface Tag {
   id: string;
   name: string;
@@ -28,15 +27,15 @@ interface Discussion {
 }
 
 const DiscussionsPage: React.FC = () => {
-  const { user, darkMode } = useStore(); // Access user and dark mode state from the global store
-  const [showForm, setShowForm] = useState(false); // State to toggle the discussion creation form
-  const [searchTerm, setSearchTerm] = useState(''); // State for the search input
-  const [filterGame, setFilterGame] = useState('ALL'); // State for filtering by game
-  const [filterCategory, setFilterCategory] = useState('ALL'); // State for filtering by category
-  const [showFilters, setShowFilters] = useState(false); // State to toggle the filters section
-  const navigate = useNavigate(); // Hook for navigation
+  const { user, darkMode } = useStore();
+  const [showForm, setShowForm] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterGame, setFilterGame] = useState('ALL');
+  const [filterCategory, setFilterCategory] = useState('ALL');
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'likes'>('date');
+  const navigate = useNavigate();
 
-  // Form states for creating a new discussion
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [selectedGame, setSelectedGame] = useState('');
@@ -44,74 +43,12 @@ const DiscussionsPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState('');
 
-  // Available tags for selection
-  const availableTags: Tag[] = [
-    { id: '1', name: 'Guide', color: '#3B82F6' },
-    { id: '2', name: 'Débutant', color: '#10B981' },
-    { id: '3', name: 'Avancé', color: '#EF4444' },
-    { id: '4', name: 'Meta', color: '#8B5CF6' },
-    { id: '5', name: 'Stratégie', color: '#F59E0B' },
-    { id: '6', name: 'Classé', color: '#EC4899' },
-    { id: '7', name: 'Casual', color: '#6366F1' }
-  ];
+  const [likedDiscussions, setLikedDiscussions] = useState<number[]>([]);
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
 
-  // Mock data for discussions
-  const discussions: Discussion[] = [
-    {
-      id: '1',
-      title: "Guide des meilleures armes dans Valorant",
-      content: "Discussion sur les meilleures armes et leurs utilisations...",
-      author: {
-        name: "ProGamer",
-        avatar: "https://thispersondoesnotexist.com/"
-      },
-      game: "Valorant",
-      category: "Guides",
-      createdAt: "Il y a 2 heures",
-      views: 1234,
-      likes: 56,
-      replies: 23,
-      tags: [
-        { id: '1', name: 'Guide', color: '#3B82F6' },
-        { id: '2', name: 'Débutant', color: '#10B981' },
-        { id: '5', name: 'Stratégie', color: '#F59E0B' }
-      ]
-    },
-    {
-      id: '2',
-      title: "Meta actuelle dans League of Legends",
-      content: "Analyse de la meta actuelle et des champions dominants...",
-      author: {
-        name: "LoLMaster",
-        avatar: "https://thispersondoesnotexist.com/"
-      },
-      game: "League of Legends",
-      category: "Discussion",
-      createdAt: "Il y a 5 heures",
-      views: 2345,
-      likes: 89,
-      replies: 45,
-      tags: [
-        { id: '4', name: 'Meta', color: '#8B5CF6' },
-        { id: '3', name: 'Avancé', color: '#EF4444' },
-        { id: '6', name: 'Classé', color: '#EC4899' }
-      ]
-    }
-  ];
-
-  // List of games and categories for filtering
   const games = ["Valorant", "League of Legends", "CS2", "Fortnite", "Apex Legends"];
   const categories = ["Guides", "Discussion", "Question", "Actualités", "Recherche d'équipe"];
 
-  // Handle form submission for creating a new discussion
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({ title, content, selectedGame, selectedCategory, selectedTags });
-    setShowForm(false); // Close the form
-    resetForm(); // Reset the form fields
-  };
-
-  // Reset the form fields
   const resetForm = () => {
     setTitle('');
     setContent('');
@@ -121,19 +58,16 @@ const DiscussionsPage: React.FC = () => {
     setNewTagName('');
   };
 
-  // Add a tag to the selected tags
   const addTag = (tag: Tag) => {
     if (!selectedTags.some(t => t.id === tag.id)) {
       setSelectedTags([...selectedTags, tag]);
     }
   };
 
-  // Remove a tag from the selected tags
   const removeTag = (tagId: string) => {
     setSelectedTags(selectedTags.filter(tag => tag.id !== tagId));
   };
 
-  // Add a new custom tag
   const addNewTag = () => {
     if (!newTagName.trim()) return;
     const newTag: Tag = {
@@ -145,21 +79,27 @@ const DiscussionsPage: React.FC = () => {
     setNewTagName('');
   };
 
-  // Filter discussions based on search term, game, and category
-  const filteredDiscussions = discussions.filter(discussion => {
-    if (searchTerm && !discussion.title.toLowerCase().includes(searchTerm.toLowerCase())) {
-      return false;
-    }
-    if (filterGame !== 'ALL' && discussion.game !== filterGame) {
-      return false;
-    }
-    if (filterCategory !== 'ALL' && discussion.category !== filterCategory) {
-      return false;
-    }
-    return true;
-  });
+  const filteredDiscussions = discussions
+    .filter(discussion => {
+      const search = searchTerm.trim().toLowerCase();
+      const matchesSearch =
+        !search ||
+        discussion.title.toLowerCase().includes(search) ||
+        discussion.game.toLowerCase().includes(search) ||
+        discussion.category.toLowerCase().includes(search) ||
+        (discussion.tags && discussion.tags.some(tag => tag.name.toLowerCase().includes(search)));
+      const matchesGame = filterGame === 'ALL' || discussion.game === filterGame;
+      const matchesCategory = filterCategory === 'ALL' || discussion.category === filterCategory;
+      return matchesSearch && matchesGame && matchesCategory;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'likes') {
+        return b.likes - a.likes;
+      } else {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
 
-  // If the user is not logged in, show a message
   if (!user) {
     return (
       <div className="text-center py-10">
@@ -175,9 +115,111 @@ const DiscussionsPage: React.FC = () => {
     );
   }
 
+  const handleCreateDiscussion = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user?.id) {
+      alert("Utilisateur non défini !");
+      return;
+    }
+
+    const newDiscussion = {
+      title,
+      content,
+      game: selectedGame,
+      category: selectedCategory,
+      tags: selectedTags.map(tag => tag.name),
+      createdAt: new Date().toISOString(),
+      createdBy: Number(user?.id),
+    };
+
+    try {
+      const response = await fetch('/api/discussions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newDiscussion)
+      });
+      if (!response.ok) throw new Error('Erreur lors de la création');
+      const savedDiscussion = await response.json();
+
+      setDiscussions([
+        {
+          ...savedDiscussion,
+          author: {
+            name: user?.username || "Anonyme",
+            avatar: user?.avatar || "https://thispersondoesnotexist.com/"
+          },
+          views: 0,
+          likes: 0,
+          replies: 0,
+          tags: selectedTags,
+        },
+        ...discussions
+      ]);
+      resetForm();
+      setShowForm(false);
+    } catch (error) {
+      alert('Erreur lors de la création de la discussion');
+    }
+  };
+
+  useEffect(() => {
+    fetch('/api/discussions')
+      .then(res => res.json())
+      .then(data => {
+        const mapped = data.map((d: any) => ({
+          ...d,
+          author: d.user
+            ? {
+                name: d.user.username || d.user.name || "Anonyme",
+                avatar: d.user.avatar || "https://thispersondoesnotexist.com/"
+              }
+            : {
+                name: "Anonyme",
+                avatar: "https://thispersondoesnotexist.com/"
+              },
+          tags: Array.isArray(d.tags)
+            ? d.tags
+            : typeof d.tags === "string"
+              ? JSON.parse(d.tags)
+              : [],
+          views: d.views || 0,
+          likes: d.likes || 0,
+          replies: d._count?.posts ?? 0,
+        }));
+        setDiscussions(mapped);
+      });
+  }, []);
+
+  const formatDate = (dateString: string) => {
+    const d = new Date(dateString);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const handleLike = async (discussionId: number) => {
+    if (likedDiscussions.includes(discussionId)) return;
+    const res = await fetch(`/api/topics/${discussionId}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id })
+    });
+    if (res.ok) {
+      setDiscussions(discussions =>
+        discussions.map(d =>
+          Number(d.id) === discussionId
+            ? { ...d, likes: d.likes + 1 }
+            : d
+        )
+      );
+      setLikedDiscussions([...likedDiscussions, discussionId]);
+    }
+  };
+
   return (
     <div className={`p-4 md:p-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-      {/* Header section */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <h1 className="text-2xl md:text-3xl font-bold mb-4 md:mb-0 inline-block border-b-4 border-gray-300 pb-2">
           Discussions
@@ -199,13 +241,10 @@ const DiscussionsPage: React.FC = () => {
           )}
         </button>
       </div>
-
-      {/* Form for creating a new discussion */}
       {showForm && (
         <div className={`mb-6 p-4 md:p-6 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-white'} shadow`}>
           <h2 className="text-lg md:text-xl font-semibold mb-4">Créer une nouvelle discussion</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Title input */}
+          <form onSubmit={handleCreateDiscussion} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-1">Titre</label>
               <input
@@ -220,8 +259,6 @@ const DiscussionsPage: React.FC = () => {
                 required
               />
             </div>
-
-            {/* Content input */}
             <div>
               <label className="block text-sm font-medium mb-1">Contenu</label>
               <textarea
@@ -236,8 +273,6 @@ const DiscussionsPage: React.FC = () => {
                 required
               />
             </div>
-
-            {/* Game and category selection */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Jeu</label>
@@ -259,7 +294,6 @@ const DiscussionsPage: React.FC = () => {
                   ))}
                 </select>
               </div>
-
               <div>
                 <label className="block text-sm font-medium mb-1">Catégorie</label>
                 <select
@@ -281,8 +315,6 @@ const DiscussionsPage: React.FC = () => {
                 </select>
               </div>
             </div>
-
-            {/* Tags selection */}
             <div>
               <label className="block text-sm font-medium mb-1">Tags</label>
               <div className="flex flex-wrap gap-2 mb-2">
@@ -329,8 +361,6 @@ const DiscussionsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-
-            {/* Form buttons */}
             <div className="flex flex-col md:flex-row justify-end space-y-2 md:space-y-0 md:space-x-2">
               <button
                 type="button"
@@ -354,8 +384,6 @@ const DiscussionsPage: React.FC = () => {
           </form>
         </div>
       )}
-
-      {/* Search and filters */}
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:items-center mb-4">
           <div className="relative flex-grow mb-4 md:mb-0 md:mr-4">
@@ -386,11 +414,9 @@ const DiscussionsPage: React.FC = () => {
             Filtres
           </button>
         </div>
-
-        {/* Filters section */}
         {showFilters && (
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-100'} mb-4`}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Jeu</label>
                 <select
@@ -425,25 +451,43 @@ const DiscussionsPage: React.FC = () => {
                   ))}
                 </select>
               </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Trier par</label>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value as 'date' | 'likes')}
+                  className={`w-full px-3 py-2 rounded-md ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white' 
+                      : 'bg-white border-gray-300 text-gray-900'
+                  } border focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                >
+                  <option value="date">Plus récent</option>
+                  <option value="likes">Plus de likes</option>
+                </select>
+              </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* List of discussions */}
       <div className="space-y-4">
         {filteredDiscussions.map((discussion) => (
-          <button
+          <div
             key={discussion.id}
-            onClick={() => navigate('/tchat')} // Redirect to the chat page
+            onClick={() => navigate(`/tchat/${discussion.id}`)}
+            role="button"
+            tabIndex={0}
             className={`w-full text-left ${
               darkMode ? 'bg-gray-800' : 'bg-white'
-            } rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg`}
+            } rounded-lg shadow p-6 transition-all duration-200 hover:shadow-lg cursor-pointer`}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') navigate(`/tchat/${discussion.id}`);
+            }}
           >
             <div className="flex items-start space-x-4">
               <img
-                src={discussion.author.avatar}
-                alt={discussion.author.name}
+                src={discussion.author?.avatar || "https://thispersondoesnotexist.com/"}
+                alt={discussion.author?.name || "Anonyme"}
                 className="w-10 h-10 rounded-full"
               />
               <div className="flex-grow">
@@ -451,7 +495,7 @@ const DiscussionsPage: React.FC = () => {
                   <div>
                     <h3 className="text-lg font-semibold mb-1">{discussion.title}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      by {discussion.author.name} • {discussion.createdAt}
+                      by {discussion.author.name} • {formatDate(discussion.createdAt)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2 mr-2">
@@ -467,17 +511,15 @@ const DiscussionsPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
-
                 <p className="text-gray-600 dark:text-gray-300 mb-4">{discussion.content}</p>
-
                 <div className="flex flex-wrap gap-2 mb-4">
-                  {discussion.tags.map((tag) => (
+                  {discussion.tags.map((tag, idx) => (
                     <span
-                      key={tag.id}
+                      key={tag.id || tag.name + idx}
                       className="flex items-center px-2 py-1 rounded-full text-sm"
-                      style={{ 
+                      style={{
                         backgroundColor: `${tag.color}20`,
-                        color: tag.color 
+                        color: tag.color
                       }}
                     >
                       <TagIcon size={12} className="mr-1" />
@@ -485,15 +527,29 @@ const DiscussionsPage: React.FC = () => {
                     </span>
                   ))}
                 </div>
-
                 <div className="flex items-center space-x-6 text-sm text-gray-500 dark:text-gray-400">
                   <div className="flex items-center">
-                    <Eye size={16} className="mr-1" />
-                    <span>{discussion.views}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <ThumbsUp size={16} className="mr-1" />
-                    <span>{discussion.likes}</span>
+                    <button
+                      disabled={likedDiscussions.includes(Number(discussion.id))}
+                      onClick={e => {
+                        e.stopPropagation();
+                        handleLike(Number(discussion.id));
+                      }}
+                      className={`flex items-center transition ${
+                        likedDiscussions.includes(Number(discussion.id))
+                          ? 'text-blue-600 opacity-100 cursor-not-allowed'
+                          : 'hover:text-blue-600'
+                      }`}
+                      aria-label="Liker"
+                    >
+                      <ThumbsUp
+                        size={16}
+                        className="mr-1"
+                        fill={likedDiscussions.includes(Number(discussion.id)) ? "#2563eb" : "none"}
+                        stroke={likedDiscussions.includes(Number(discussion.id)) ? "#2563eb" : "currentColor"}
+                      />
+                      <span>{discussion.likes}</span>
+                    </button>
                   </div>
                   <div className="flex items-center">
                     <MessageSquare size={16} className="mr-1" />
@@ -501,12 +557,12 @@ const DiscussionsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center">
                     <Clock size={16} className="ml(1" />
-                    <span>{discussion.createdAt}</span>
+                    <span>{formatDate(discussion.createdAt)}</span>
                   </div>
                 </div>
               </div>
             </div>
-          </button>
+          </div>
         ))}
       </div>
     </div>

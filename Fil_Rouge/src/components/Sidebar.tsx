@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useStore } from '../lib/store';
-import { TrendingUp, Gamepad2, Home, Trophy, MessageSquare, Users, Lock, Menu, X, ChevronLeft, ChevronRight} from 'lucide-react';
+import { Gamepad2, Home, Trophy, MessageSquare, Users, Lock, Menu, X, ChevronLeft, ChevronRight} from 'lucide-react';
 
 const Sidebar: React.FC = () => {
   const { darkMode } = useStore();
@@ -12,27 +12,28 @@ const Sidebar: React.FC = () => {
   const openMobileSidebar = () => setIsMobileOpen(true);
   const closeMobileSidebar = () => setIsMobileOpen(false);
 
+  const { user } = useStore();
   const menuItems = [
     { path: '/', label: 'Accueil', icon: <Home size={20} /> },
-    { path: '/trends', label: 'Tendances', icon: <TrendingUp size={20} /> },
     { path: '/discussions', label: 'Discussions', icon: <MessageSquare size={20} /> },
     { path: '/games', label: 'Jeux', icon: <Gamepad2 size={20} /> },
     { path: '/competition', label: 'Compétition', icon: <Trophy size={20} /> },
     { path: '/teams', label: 'Équipes', icon: <Users size={20} /> },
-    { path: '/admin', label: 'Dashboard', icon: <Lock size={20} /> },
+    ...(user?.isAdmin
+      ? [{ path: '/admin', label: 'Dashboard', icon: <Lock size={20} /> }]
+      : []),
   ];
 
   return (
     <>
-      {/* Desktop Sidebar */}
+
       <aside
         className={`${
           darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
         } ${
           collapsed ? 'w-16' : 'w-64'
-        } min-h-screen transition-all duration-300 shadow-md hidden md:block relative`}
+        } h-full min-h-screen transition-all duration-300 shadow-md hidden md:block relative`}
       >
-        {/* Bouton de toggle (uniquement en desktop) */}
         <button
           onClick={toggleSidebar}
           className="absolute -right-3 top-9 bg-white dark:bg-gray-800 rounded-full p-2 shadow-md border border-gray-200 dark:border-gray-700"
@@ -65,7 +66,6 @@ const Sidebar: React.FC = () => {
         </div>
       </aside>
 
-      {/* Mobile Sidebar (Overlay) */}
       {isMobileOpen && (
         <div 
           className="fixed inset-0 bg-black/50 z-40 md:hidden" 
@@ -111,7 +111,6 @@ const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Hamburger Button */}
       <button
         onClick={openMobileSidebar}
         className="fixed top-3 z-30 md:hidden p-2 rounded-md "
