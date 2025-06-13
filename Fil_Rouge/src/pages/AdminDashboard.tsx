@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // Ajout de l'import
 
 const BACKEND_URL = "http://localhost:3001";
 
@@ -39,6 +40,7 @@ const AdminDashboard: React.FC = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [likes, setLikes] = useState<Like[]>([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate(); // Ajout du hook
 
   useEffect(() => {
     setLoading(true);
@@ -119,6 +121,13 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#181c2f] to-[#232946] font-mono text-[#e0e0e0]">
+      {/* Bouton Home */}
+      <button
+        className="fixed top-6 left-6 px-4 py-2 bg-[#232946] border border-[#64ffda] text-[#64ffda] rounded hover:bg-[#64ffda] hover:text-[#232946] transition font-bold shadow-lg z-50"
+        onClick={() => navigate("/")}
+      >
+        ← Accueil
+      </button>
       <div className="max-w-6xl mx-auto py-10 px-4">
         <h1 className="text-4xl font-bold mb-8 text-[#64ffda] tracking-widest neon-glow">Admin Dashboard</h1>
         <div className="flex gap-4 mb-8">

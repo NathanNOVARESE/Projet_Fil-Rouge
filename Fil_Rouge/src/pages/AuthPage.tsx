@@ -40,9 +40,13 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       data = isJson ? await response.json() : {};
       if (!response.ok) throw new Error(data.error || (mode === 'register' ? 'Registration failed' : 'Login failed'));
 
-      setUser(data.user);
       if (data.token) localStorage.setItem('token', data.token);
-      navigate('/');
+      setUser(data.user);
+      if (mode === 'register') {
+        window.location.reload();
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.message || 'An error occurred. Please try again.');
     } finally {
@@ -149,13 +153,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                   {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
-              {mode === 'login' && (
-                <div className="text-right mt-1">
-                  <a href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400">
-                    Forgot your password?
-                  </a>
-                </div>
-              )}
             </div>
           </div>
           {error && (
